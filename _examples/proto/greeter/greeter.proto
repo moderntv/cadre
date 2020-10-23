@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+// package definition
+package example;
+option go_package = "github.com/moderntv/cadre/_examples/greeter;greeter";
+
+// service definition
+service GreeterService {
+    rpc SayHi(GreetingRequest) returns (GreetingResponse) {};
+}
+
+// messages' definitions
+message GreetingRequest {
+  string name = 1;
+}
+
+message GreetingResponse {
+  string greeting = 1;
+}

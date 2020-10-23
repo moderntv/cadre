@@ -1,0 +1,31 @@
+package metrics
+
+import "github.com/prometheus/client_golang/prometheus"
+
+// SummaryVec
+func (registry *Registry) NewSummaryVec(opts prometheus.SummaryOpts, labels []string) *prometheus.SummaryVec {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewSummaryVec(opts, labels)
+}
+
+func (registry *Registry) RegisterNewSummaryVec(name string, opts prometheus.SummaryOpts, labels []string) (c *prometheus.SummaryVec, err error) {
+	c = registry.NewSummaryVec(opts, labels)
+	err = registry.Register(name, c)
+
+	return
+}
+
+// CounterVec
+func (registry *Registry) NewCounterVec(opts prometheus.CounterOpts, labels []string) *prometheus.CounterVec {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewCounterVec(opts, labels)
+}
+
+func (registry *Registry) RegisterNewCounterVec(name string, opts prometheus.CounterOpts, labels []string) (c *prometheus.CounterVec, err error) {
+	c = registry.NewCounterVec(opts, labels)
+	err = registry.Register(name, c)
+
+	return
+}
