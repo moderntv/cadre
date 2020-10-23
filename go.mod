@@ -3,7 +3,7 @@ module github.com/moderntv/cadre
 go 1.14
 
 require (
-	github.com/moderntv/hashring v1.0.0
+	github.com/moderntv/hashring v1.0.1
 	github.com/cespare/xxhash/v2 v2.1.1
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gin-gonic/gin v1.4.0
