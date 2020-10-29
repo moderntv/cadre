@@ -3,31 +3,32 @@ package status
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 type Status struct {
 	version string
 
 	cmu        sync.RWMutex
-	components map[string]*ComponentStatus
+	components map[string]*componentStatus
 }
 
 type Report struct {
 	Version    string                     `json:"version"`
 	Status     StatusType                 `json:"status"`
-	Components map[string]ComponentStatus `json:"components"`
+	Components map[string]componentStatus `json:"components"`
 }
 
 func NewStatus(version string) (status *Status) {
 	status = &Status{
 		version:    version,
-		components: map[string]*ComponentStatus{},
+		components: map[string]*componentStatus{},
 	}
 
 	return
 }
 
-func (s *Status) Register(name string) (cs *ComponentStatus, err error) {
+func (s *Status) Register(name string) (cs ComponentStatus, err error) {
 	s.cmu.Lock()
 	defer s.cmu.Unlock()
 	if _, ok := s.components[name]; ok {
@@ -35,11 +36,12 @@ func (s *Status) Register(name string) (cs *ComponentStatus, err error) {
 		return
 	}
 
-	cs = &ComponentStatus{
-		Status:  ERROR,
-		Message: "uninitialized",
+	lcs := &componentStatus{
+		CStatus:  ERROR,
+		CMessage: "uninitialized",
 	}
-	s.components[name] = cs
+	s.components[name] = lcs
+	cs = lcs
 
 	return
 }
@@ -50,21 +52,20 @@ func (s *Status) Report() (report Report) {
 
 	report.Version = s.version
 	report.Status = OK
-	report.Components = map[string]ComponentStatus{}
+	report.Components = map[string]componentStatus{}
 	for n, cs := range s.components {
 		if cs == nil {
 			continue
 		}
 
-		cs.mu.Lock()
-		report.Components[n] = ComponentStatus{
-			Status:  cs.Status,
-			Message: cs.Message,
+		report.Components[n] = componentStatus{
+			CStatus:    cs.Status(),
+			CMessage:   cs.Message(),
+			CUpdatedAt: cs.LastUpdate(),
 		}
-		cs.mu.Unlock()
 	}
 	for _, s := range report.Components {
-		if s.Status == ERROR {
+		if s.Status() == ERROR {
 			report.Status = ERROR
 			break
 		}
@@ -73,16 +74,41 @@ func (s *Status) Report() (report Report) {
 	return
 }
 
-type ComponentStatus struct {
-	mu      sync.Mutex
-	Status  StatusType `json:"status"`
-	Message string     `json:"message"`
+type ComponentStatus interface {
+	SetStatus(statusType StatusType, message string)
+	// getters
+	Status() StatusType
+	Message() string
+	LastUpdate() time.Time
 }
 
-func (cs *ComponentStatus) SetStatus(statusType StatusType, message string) {
+type componentStatus struct {
+	mu         sync.RWMutex
+	CStatus    StatusType `json:"status,omitempty"`
+	CMessage   string     `json:"message,omitempty"`
+	CUpdatedAt time.Time  `json:"updated_at,omitempty"`
+}
+
+func (cs *componentStatus) SetStatus(statusType StatusType, message string) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cs.Message = message
-	cs.Status = statusType
+	cs.CMessage = message
+	cs.CStatus = statusType
+	cs.CUpdatedAt = time.Now()
+}
+func (cs *componentStatus) Status() StatusType {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+	return cs.CStatus
+}
+func (cs *componentStatus) Message() string {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+	return cs.CMessage
+}
+func (cs *componentStatus) LastUpdate() time.Time {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+	return cs.CUpdatedAt
 }

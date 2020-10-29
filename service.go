@@ -15,12 +15,12 @@ type service struct {
 	name string
 	// endpoint    string
 
-	status        *status.ComponentStatus
+	status        status.ComponentStatus
 	healthService *health.Server // can be nil
 }
 
 // newService creates a new service instance. if healthService is disabled in Server, it can be nil
-func newService(name string, cs *status.ComponentStatus, healthService *health.Server) (i Service) {
+func newService(name string, cs status.ComponentStatus, healthService *health.Server) (i Service) {
 	i = &service{
 		name: name,
 
