@@ -16,6 +16,20 @@ func (registry *Registry) RegisterNewSummaryVec(name string, opts prometheus.Sum
 	return
 }
 
+// Counter
+func (registry *Registry) NewCounter(opts prometheus.CounterOpts) prometheus.Counter {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewCounter(opts)
+}
+
+func (registry *Registry) RegisterNewCounter(name string, opts prometheus.CounterOpts) (c prometheus.Counter, err error) {
+	c = registry.NewCounter(opts)
+	err = registry.Register(name, c)
+
+	return
+}
+
 // CounterVec
 func (registry *Registry) NewCounterVec(opts prometheus.CounterOpts, labels []string) *prometheus.CounterVec {
 	opts.Namespace = registry.namespace
