@@ -7,11 +7,11 @@ import (
 type Type error
 
 var (
-	ErrInvalidInput       = Type(errors.New("invalid input"))
-	ErrNotAllowed         = Type(errors.New("not allowed"))
-	ErrNotFound           = Type(errors.New("not found"))
-	ErrTemporyUnavailable = Type(errors.New("temporary unavailable"))
-	ErrInternalError      = Type(errors.New("internal error"))
+	ErrInvalidInput         = Type(errors.New("invalid input"))
+	ErrNotAllowed           = Type(errors.New("not allowed"))
+	ErrNotFound             = Type(errors.New("not found"))
+	ErrTemporaryUnavailable = Type(errors.New("temporary unavailable"))
+	ErrInternalError        = Type(errors.New("internal error"))
 )
 
 type TypedError struct {
