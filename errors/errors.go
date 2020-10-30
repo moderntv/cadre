@@ -19,7 +19,7 @@ type TypedError struct {
 	cause error
 }
 
-func NewTyped(type_ Type, cause error) TypedError {
+func NewTyped(typ Type, cause error) TypedError {
 	return TypedError{
 		type_: type_,
 		cause: cause,
