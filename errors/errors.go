@@ -21,7 +21,7 @@ type TypedError struct {
 
 func NewTyped(typ Type, cause error) TypedError {
 	return TypedError{
-		type_: type_,
+		type_: typ,
 		cause: cause,
 	}
 }
