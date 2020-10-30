@@ -1,7 +1,11 @@
 package responses
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
+
+	cerr "github.com/moderntv/cadre/errors"
 )
 
 type SuccessResponse struct {
@@ -33,6 +37,30 @@ func NewError(err error) Error {
 		Message: "Error encountered",
 		Data:    err.Error(),
 	}
+}
+
+func FromError(c *gin.Context, err error) {
+	if errors.Is(err, cerr.ErrInvalidInput) {
+		BadRequest(c, NewError(err))
+		return
+	}
+	if errors.Is(err, cerr.ErrNotAllowed) {
+		Forbidden(c, NewError(err))
+		return
+	}
+	if errors.Is(err, cerr.ErrNotFound) {
+		NotFound(c, NewError(err))
+		return
+	}
+	if errors.Is(err, cerr.ErrTemporyUnavailable) {
+		Unavailable(c, NewError(err))
+		return
+	}
+	if errors.Is(err, cerr.ErrInternalError) {
+		InternalError(c, NewError(err))
+		return
+	}
+	InternalError(c, NewError(err))
 }
 
 func Ok(c *gin.Context, data interface{}) {
