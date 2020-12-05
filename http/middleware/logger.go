@@ -19,7 +19,7 @@ func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
 		dumplogger := logger.With().
 			Str("method", c.Request.Method).
 			Str("path", path).
-			Dur("latency", latency).
+			Dur("latency_ns", latency).
 			Int("status_code", c.Writer.Status()).
 			Str("ip", c.ClientIP()).Logger()
 
