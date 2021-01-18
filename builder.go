@@ -647,12 +647,30 @@ func WithRoute(method, path string, handlers ...gin.HandlerFunc) HTTPOption {
 // may cause gin configuration eror at runtime. use with care
 func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 	return func(h *httpOptions) error {
-		_, ok := h.routingGroups[group.Base]
-		if ok {
-			return fmt.Errorf("routing group already registered")
+		g, ok := h.routingGroups[group.Base]
+		if !ok {
+			h.routingGroups[group.Base] = group
+			return nil
 		}
 
-		h.routingGroups[group.Base] = group
+		// TODO: middleware
+		g.Middleware = append(h.routingGroups[group.Base].Middleware, group.Middleware...)
+
+		for path, methodHandlers := range group.Routes {
+			_, ok = h.routingGroups[group.Base].Routes[path]
+			if !ok {
+				h.routingGroups[group.Base].Routes[path] = map[string][]gin.HandlerFunc{}
+			}
+
+			for method, handlers := range methodHandlers {
+				_, ok = h.routingGroups[group.Base].Routes[path][method]
+				if !ok {
+					h.routingGroups[group.Base].Routes[path][method] = []gin.HandlerFunc{}
+				}
+
+				h.routingGroups[group.Base].Routes[path][method] = append(h.routingGroups[group.Base].Routes[path][method], handlers...)
+			}
+		}
 
 		return nil
 	}
