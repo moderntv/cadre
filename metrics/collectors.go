@@ -43,3 +43,31 @@ func (registry *Registry) RegisterNewCounterVec(name string, opts prometheus.Cou
 
 	return
 }
+
+// Gauge
+func (registry *Registry) NewGauge(opts prometheus.GaugeOpts) prometheus.Gauge {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewGauge(opts)
+}
+
+func (registry *Registry) RegisterNewGauge(name string, opts prometheus.GaugeOpts) (c prometheus.Gauge, err error) {
+	c = registry.NewGauge(opts)
+	err = registry.Register(name, c)
+
+	return
+}
+
+// GaugeVec
+func (registry *Registry) NewGaugeVec(opts prometheus.GaugeOpts, labels []string) *prometheus.GaugeVec {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewGaugeVec(opts, labels)
+}
+
+func (registry *Registry) RegisterNewGaugeVec(name string, opts prometheus.GaugeOpts, labels []string) (c *prometheus.GaugeVec, err error) {
+	c = registry.NewGaugeVec(opts, labels)
+	err = registry.Register(name, c)
+
+	return
+}
