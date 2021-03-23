@@ -200,7 +200,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 	var httpServer *http.HttpServer
 	if b.httpOptions != nil {
 		c.httpAddr = b.httpOptions.listeningAddress
-		httpServer, err = http.NewHttpServer(ctx, b.httpOptions.listeningAddress, "main_http", *b.logger, b.metrics)
+		httpServer, err = http.NewHttpServer(ctx, b.httpOptions.listeningAddress, "main_http", *b.logger, b.metrics, b.httpOptions.globalMiddleware...)
 		if err != nil {
 			return
 		}

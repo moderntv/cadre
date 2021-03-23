@@ -28,22 +28,26 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
 
-func NewHttpServer(ctx context.Context, addr, serverName string, logger zerolog.Logger, metricsRegistry *metrics.Registry) (server *HttpServer, err error) {
+func NewHttpServer(ctx context.Context, addr, serverName string, logger zerolog.Logger, metricsRegistry *metrics.Registry, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
 	server = &HttpServer{
 		addr: addr,
 
 		router: gin.New(),
 	}
 
-	mm, err := middleware.NewMetrics(metricsRegistry, serverName)
+	metricsMiddleware, err := middleware.NewMetrics(metricsRegistry, serverName)
 	if err != nil {
 		return
 	}
-	server.router.Use(
-		mm,
+
+	middlewares = append([]gin.HandlerFunc{
+		metricsMiddleware,
 		middleware.NewLogger(logger),
 		gin.Recovery(),
-	)
+	}, middlewares...)
+
+	server.router.Use(middlewares...)
+
 	// CORS example
 	// // g.Use(cors.Default())
 	// corsConfig := cors.DefaultConfig()
