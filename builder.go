@@ -76,6 +76,28 @@ func NewBuilder(name string, options ...Option) (b *Builder, err error) {
 	return
 }
 
+func (b *Builder) getHttpMux(c *cadre, listen string, serviceName string) *stdhttp.ServeMux {
+	hServer, ok := c.httpServers[listen]
+	if ok {
+		hServer.Services = append(hServer.Services, serviceName)
+		return hServer.Mux
+	}
+	mux := stdhttp.NewServeMux()
+	server := &stdhttp.Server{
+		Addr:    listen,
+		Handler: mux,
+	}
+
+	hServer = &httpServer{
+		Services: []string{serviceName},
+		Server:   server,
+		Mux:      mux,
+	}
+
+	c.httpServers[listen] = hServer
+	return mux
+}
+
 // Build validates the Builder's configuration and creates a new Cadre server
 func (b *Builder) Build() (c *cadre, err error) {
 	err = b.ensure()
@@ -93,6 +115,8 @@ func (b *Builder) Build() (c *cadre, err error) {
 		logger:  *b.logger,
 		status:  b.status,
 		metrics: b.metrics,
+
+		httpServers: make(map[string]*httpServer),
 	}
 
 	if b.httpOptions == nil && b.grpcOptions == nil {
@@ -175,12 +199,8 @@ func (b *Builder) Build() (c *cadre, err error) {
 				grpcAddr = b.httpOptions.listeningAddress
 			}
 
-			m := stdhttp.NewServeMux()
+			m := b.getHttpMux(c, b.grpcOptions.channelzHttpAddr, "channelz")
 			m.Handle("/", channelz.CreateHandler("/", grpcAddr))
-			c.channelzHttpServer = &stdhttp.Server{
-				Addr:    b.grpcOptions.channelzHttpAddr,
-				Handler: m,
-			}
 			c.channelzAddr = b.grpcOptions.channelzHttpAddr
 		}
 		// user-specified grpc services
@@ -229,11 +249,8 @@ func (b *Builder) Build() (c *cadre, err error) {
 	}
 	if b.prometheusHttpServerAddr != "" {
 		c.prometheusAddr = b.prometheusHttpServerAddr
-
-		c.prometheusHttpServer = &stdhttp.Server{
-			Addr:    c.prometheusAddr,
-			Handler: promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}),
-		}
+		m := b.getHttpMux(c, c.prometheusAddr, "prometheus")
+		m.Handle(b.prometheusPath, promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}))
 	}
 
 	if httpServer != nil || (b.grpcOptions != nil && b.grpcOptions.multiplexWithHTTP) {

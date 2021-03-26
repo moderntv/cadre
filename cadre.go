@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	stdhttp "net/http"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -17,6 +18,12 @@ import (
 type Cadre interface {
 	Start() error
 	Shutdown() error
+}
+
+type httpServer struct {
+	Services []string
+	Server   *stdhttp.Server
+	Mux      *stdhttp.ServeMux
 }
 
 type cadre struct {
@@ -38,10 +45,9 @@ type cadre struct {
 	swg          sync.WaitGroup // services wait group
 	grpcServer   *grpc.Server
 	grpcListener net.Listener
-	// httpServer         *http.HttpServer
-	httpServer           *stdhttp.Server
-	channelzHttpServer   *stdhttp.Server
-	prometheusHttpServer *stdhttp.Server
+
+	httpServers map[string]*httpServer
+	httpServer  *stdhttp.Server
 }
 
 func (c *cadre) Start() error {
@@ -53,13 +59,13 @@ func (c *cadre) Start() error {
 	c.swg.Add(1)
 	go c.startGRPC()
 
-	// start channelz http server
-	c.swg.Add(1)
-	go c.startChannelzHttp()
-	// start prometheus http server
-	c.swg.Add(1)
-	go c.startPrometheusHttp()
+	// start other http servers
+	for _, server := range c.httpServers {
+		c.swg.Add(1)
+		c.startHttpServer(server)
+	}
 
+	<-c.ctx.Done()
 	c.swg.Wait()
 	return nil
 }
@@ -116,55 +122,24 @@ func (c *cadre) startHttp() {
 		}
 
 	}()
-	<-c.ctx.Done()
 
 	// TODO: cleanup
 }
 
-func (c *cadre) startPrometheusHttp() {
+func (c *cadre) startHttpServer(server *httpServer) {
 	defer c.swg.Done()
-
-	if c.prometheusHttpServer == nil {
-		c.logger.Trace().Msg("standalone prometheus http server disabled")
-		return
-	}
 
 	go func() {
 		c.logger.Debug().
-			Str("addr", c.prometheusAddr).
-			Msg("starting prometheus http server")
+			Str("addr", server.Server.Addr).
+			Msg("starting " + strings.Join(server.Services, ", ") + " http server")
 
-		err := c.prometheusHttpServer.ListenAndServe()
+		err := server.Server.ListenAndServe()
 		if err != nil {
 			c.logger.Error().
 				Err(err).
-				Msg("prometheus http server failed")
+				Msg("http server failed")
 		}
 
 	}()
-	<-c.ctx.Done()
-}
-
-func (c *cadre) startChannelzHttp() {
-	defer c.swg.Done()
-
-	if c.channelzHttpServer == nil {
-		c.logger.Trace().Msg("standalone channelz http server disabled")
-		return
-	}
-
-	go func() {
-		c.logger.Debug().
-			Str("addr", c.channelzAddr).
-			Msg("starting channelz http server")
-
-		err := c.channelzHttpServer.ListenAndServe()
-		if err != nil {
-			c.logger.Error().
-				Err(err).
-				Msg("channelz http server failed")
-		}
-
-	}()
-	<-c.ctx.Done()
 }
