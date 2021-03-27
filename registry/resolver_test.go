@@ -1,7 +1,6 @@
 package registry_test
 
 import (
-	"reflect"
 	"testing"
 
 	"google.golang.org/grpc/resolver"
@@ -22,7 +21,7 @@ func Test_resolverBuilder_Build(t *testing.T) {
 	}
 
 	sReg, err := static.NewRegistry(map[string][]string{
-		"foosvc": []string{"localhost:5000"},
+		"foosvc": {"localhost:5000"},
 	})
 	if err != nil || sReg == nil {
 		t.Errorf("failed to create static registry for test: %v", err)
@@ -33,7 +32,6 @@ func Test_resolverBuilder_Build(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    resolver.Resolver
 		wantErr bool
 	}{
 		{
@@ -59,8 +57,9 @@ func Test_resolverBuilder_Build(t *testing.T) {
 				t.Errorf("resolverBuilder.Build() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("resolverBuilder.Build() = %v, want %v", got, tt.want)
+
+			if got == nil {
+				t.Errorf("resolverBuilder.Build() = nil, want not nil")
 			}
 		})
 	}

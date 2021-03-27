@@ -52,7 +52,7 @@ func FromError(c *gin.Context, err error) {
 		NotFound(c, NewError(err))
 		return
 	}
-	if errors.Is(err, cerr.ErrTemporyUnavailable) {
+	if errors.Is(err, cerr.ErrTemporaryUnavailable) {
 		Unavailable(c, NewError(err))
 		return
 	}
@@ -148,7 +148,7 @@ func Conflict(c *gin.Context, errors ...Error) {
 
 // InternalError sets the HTTP response status to 500
 func InternalError(c *gin.Context, errors ...Error) {
-	c.AbortWithStatusJSON(409, ErrorResponse{
+	c.AbortWithStatusJSON(500, ErrorResponse{
 		Message: "An unexpected error has occured. A team of monkeys was already sent to site. " +
 			"We're not sure, when it will be ready, but it sure as hell will be banana",
 		Errors: errors,

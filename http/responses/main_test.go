@@ -221,7 +221,7 @@ func TestBadRequest(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1"), errors.New("error2")},
 			wantStatus:   http.StatusBadRequest,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"},{"type":"GENERIC_ERROR","message":"Error encountered","data":"error2"}],"message":"The request is not valid in this context"}`,
+			wantBody:     `{"message":"The request is not valid in this context","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"},{"type":"GENERIC_ERROR","message":"Error encountered","data":"error2"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -254,14 +254,14 @@ func TestCannotBind(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			err:          nil,
 			wantStatus:   http.StatusBadRequest,
-			wantBody:     `{"errors":[{"type":"UNKNOWN_INPUT_VALIDATION_ERROR","message":"Sent data do not correspond to the template","data":""}],"message":"The request is not valid in this context"}`,
+			wantBody:     `{"message":"The request is not valid in this context","errors":[{"type":"UNKNOWN_INPUT_VALIDATION_ERROR","message":"Sent data do not correspond to the template","data":""}]}`,
 		},
 		{
 			name:         "empty",
 			httpTestShit: newHttpTestshit(),
 			err:          errors.New("error1"),
 			wantStatus:   http.StatusBadRequest,
-			wantBody:     `{"errors":[{"type":"UNKNOWN_INPUT_VALIDATION_ERROR","message":"There were errors when applying sent data to template: error1","data":"error1"}],"message":"The request is not valid in this context"}`,
+			wantBody:     `{"message":"The request is not valid in this context","errors":[{"type":"UNKNOWN_INPUT_VALIDATION_ERROR","message":"There were errors when applying sent data to template: error1","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -294,7 +294,7 @@ func TestUnauthorized(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusUnauthorized,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}],"message":"You have to be logged in to view this resource"}`,
+			wantBody:     `{"message":"You have to be logged in to view this resource","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -327,7 +327,7 @@ func TestForbidden(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusForbidden,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}],"message":"You are not allowed to view this resource"}`,
+			wantBody:     `{"message":"You are not allowed to view this resource","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -360,7 +360,7 @@ func TestNotFound(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusNotFound,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}],"message":"The resource is unavailable"}`,
+			wantBody:     `{"message":"The resource is unavailable","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -426,7 +426,7 @@ func TestConflict(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusConflict,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}],"message":"Cannot complete due to a conflict"}`,
+			wantBody:     `{"message":"Cannot complete due to a conflict","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -459,7 +459,7 @@ func TestUnavailable(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusServiceUnavailable,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}],"message":"Service is temporarily unavailable"}`,
+			wantBody:     `{"message":"Service is temporarily unavailable","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -492,7 +492,7 @@ func TestInternalError(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusInternalServerError,
-			wantBody:     `{"errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}],"message":"An unexpected error has occured. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana"}`,
+			wantBody:     `{"message":"An unexpected error has occured. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {

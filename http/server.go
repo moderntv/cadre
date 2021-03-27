@@ -4,12 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/moderntv/cadre/http/middleware"
 	"github.com/moderntv/cadre/http/responses"
-	"github.com/moderntv/cadre/metrics"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 )
 
 type RoutingGroup struct {
@@ -28,23 +25,12 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
 
-func NewHttpServer(ctx context.Context, addr, serverName string, logger zerolog.Logger, metricsRegistry *metrics.Registry, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
+func NewHttpServer(ctx context.Context, addr string, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
 	server = &HttpServer{
 		addr: addr,
 
 		router: gin.New(),
 	}
-
-	metricsMiddleware, err := middleware.NewMetrics(metricsRegistry, serverName)
-	if err != nil {
-		return
-	}
-
-	middlewares = append([]gin.HandlerFunc{
-		metricsMiddleware,
-		middleware.NewLogger(logger),
-		gin.Recovery(),
-	}, middlewares...)
 
 	server.router.Use(middlewares...)
 
