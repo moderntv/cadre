@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/moderntv/cadre"
-	"github.com/moderntv/cadre/_example/greeter"
-	greeter_pb "github.com/moderntv/cadre/_example/proto/greeter"
+	"github.com/moderntv/cadre/_examples/greeter"
+	greeter_pb "github.com/moderntv/cadre/_examples/proto/greeter"
 	"github.com/moderntv/cadre/http"
 	"github.com/moderntv/cadre/http/responses"
 )
@@ -39,11 +39,14 @@ func main() {
 	b, err := cadre.NewBuilder(
 		"example",
 		cadre.WithLogger(&logger),
+		cadre.WithMetricsListeningAddress(":7000"),
+		cadre.WithStatusListeningAddress(":7000"),
 		cadre.WithGRPC(
 			cadre.WithGRPCListeningAddress(":9000"),
 			cadre.WithService("example.GreeterService", greeterRegistrator),
 		),
 		cadre.WithHTTP(
+			"main_http",
 			cadre.WithHTTPListeningAddress(":8000"),
 			cadre.WithRoutingGroup(http.RoutingGroup{
 				Base: "",

@@ -39,10 +39,22 @@ func WithStatus(status *status.Status) Option {
 	}
 }
 
-// WithMetrics allows replacing the default metrics registry with a custom pre-configured one.
+// WithStatusListeningAddress is meant to configure cadre to use
+// a separate http server for status endpoint - useful for putting it behind firewall
+// Default is to use the first HTTP server's listening address merging them together. This may cause problems
+// when a conflicting route is configured
+func WithStatusListeningAddress(serverListeningAddress string) Option {
+	return func(options *Builder) error {
+		options.statusHttpServerAddr = serverListeningAddress
+
+		return nil
+	}
+}
+
+// WithMetricsRegistry allows replacing the default metrics registry with a custom pre-configured one.
 // If used, the prometheus registry from metrics Registry will replace the default prometheus registry.
-// Do not use with WithPrometheus
-func WithMetrics(metrics *metrics.Registry) Option {
+// Do not use with WithPrometheusRegistry
+func WithMetricsRegistry(metrics *metrics.Registry) Option {
 	return func(options *Builder) error {
 		options.metrics = metrics
 
@@ -50,9 +62,9 @@ func WithMetrics(metrics *metrics.Registry) Option {
 	}
 }
 
-// WithPrometheus configures cadre to use a specific prometheus registry.
+// WithPrometheusRegistry configures cadre to use a specific prometheus registry.
 // This prometheus registry will be used to create metrics registry.
-func WithPrometheus(registry *prometheus.Registry) Option {
+func WithPrometheusRegistry(registry *prometheus.Registry) Option {
 	return func(options *Builder) error {
 		options.prometheusRegistry = registry
 
@@ -62,9 +74,11 @@ func WithPrometheus(registry *prometheus.Registry) Option {
 
 // WithPrometheusListeningAddress is meant to configure cadre to use
 // a separate http server for prometheus - useful for putting it behind firewall
-func WithPrometheusListeningAddress(serverListeningAddress string) Option {
+// Default is to use the first HTTP server's listening address merging them together. This may cause problems
+// when a conflicting route is configured
+func WithMetricsListeningAddress(serverListeningAddress string) Option {
 	return func(options *Builder) error {
-		options.prometheusHttpServerAddr = serverListeningAddress
+		options.metricsHttpServerAddr = serverListeningAddress
 
 		return nil
 	}

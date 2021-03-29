@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	stdhttp "net/http"
-	"strings"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -20,21 +19,9 @@ type Cadre interface {
 	Shutdown() error
 }
 
-type httpServer struct {
-	Services []string
-	Server   *stdhttp.Server
-	Mux      *stdhttp.ServeMux
-}
-
 type cadre struct {
 	ctx       context.Context
 	ctxCancel func()
-
-	// config stuff that is good to know at runtime
-	httpAddr       string
-	grpcAddr       string
-	channelzAddr   string
-	prometheusAddr string
 
 	logger  zerolog.Logger
 	status  *status.Status
@@ -43,27 +30,23 @@ type cadre struct {
 	grpcHealthService *health.Server
 
 	swg          sync.WaitGroup // services wait group
+	grpcAddr     string
 	grpcServer   *grpc.Server
 	grpcListener net.Listener
 
-	httpServers map[string]*httpServer
-	httpServer  *stdhttp.Server
+	httpServers map[string]*stdhttp.Server
 }
 
 func (c *cadre) Start() error {
-	// start http server
-	c.swg.Add(1)
-	go c.startHttp()
+	// start http servers
+	for port, httpServer := range c.httpServers {
+		c.swg.Add(1)
+		go c.startHttpServer(port, httpServer)
+	}
 
 	// start grpc server
 	c.swg.Add(1)
 	go c.startGRPC()
-
-	// start other http servers
-	for _, server := range c.httpServers {
-		c.swg.Add(1)
-		c.startHttpServer(server)
-	}
 
 	<-c.ctx.Done()
 	c.swg.Wait()
@@ -76,70 +59,43 @@ func (c *cadre) Shutdown() error {
 	return nil
 }
 
+func (c *cadre) startHttpServer(addr string, httpServer *stdhttp.Server) {
+	defer c.swg.Done()
+
+	c.logger.Debug().
+		Str("addr", addr).
+		Msg("starting http server")
+
+	err := httpServer.ListenAndServe()
+	if err != nil {
+		c.logger.Error().
+			Err(err).
+			Msg("http server failed")
+	}
+
+	<-c.ctx.Done()
+}
+
 func (c *cadre) startGRPC() {
 	defer c.swg.Done()
 
+	c.logger.Debug().Interface("grpclistener", c.grpcListener)
 	if c.grpcListener == nil || c.grpcServer == nil {
 		c.logger.Trace().Msg("standalone grpc server disabled")
 
 		return
 	}
 
-	go func() {
-		c.logger.Debug().
-			Str("addr", c.grpcAddr).
-			Msg("starting grpc server")
+	c.logger.Debug().
+		Str("addr", c.grpcAddr).
+		Msg("starting grpc server")
 
-		err := c.grpcServer.Serve(c.grpcListener)
-		if err != nil {
-			c.logger.Error().
-				Err(err).
-				Msg("grpc server failed")
-		}
-
-	}()
-	<-c.ctx.Done()
-}
-
-func (c *cadre) startHttp() {
-	defer c.swg.Done()
-
-	if c.httpServer == nil {
-		c.logger.Trace().Msg("standalone http server disabled")
-		return
+	err := c.grpcServer.Serve(c.grpcListener)
+	if err != nil {
+		c.logger.Error().
+			Err(err).
+			Msg("grpc server failed")
 	}
 
-	go func() {
-		c.logger.Debug().
-			Str("addr", c.httpAddr).
-			Msg("starting http server")
-
-		err := c.httpServer.ListenAndServe()
-		if err != nil {
-			c.logger.Error().
-				Err(err).
-				Msg("http server failed")
-		}
-
-	}()
-
-	// TODO: cleanup
-}
-
-func (c *cadre) startHttpServer(server *httpServer) {
-	defer c.swg.Done()
-
-	go func() {
-		c.logger.Debug().
-			Str("addr", server.Server.Addr).
-			Msg("starting " + strings.Join(server.Services, ", ") + " http server")
-
-		err := server.Server.ListenAndServe()
-		if err != nil {
-			c.logger.Error().
-				Err(err).
-				Msg("http server failed")
-		}
-
-	}()
+	<-c.ctx.Done()
 }

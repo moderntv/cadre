@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	greeterpb "github.com/moderntv/cadre/_example/proto/greeter"
+	greeterpb "github.com/moderntv/cadre/_examples/proto/greeter"
 	"google.golang.org/grpc"
 )
 

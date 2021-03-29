@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/moderntv/cadre/http/responses"
+	"github.com/rs/zerolog"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +17,9 @@ type RoutingGroup struct {
 }
 
 type HttpServer struct {
+	name string
 	addr string
+	log  zerolog.Logger
 
 	router *gin.Engine
 }
@@ -25,9 +28,11 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
 
-func NewHttpServer(ctx context.Context, addr string, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
+func NewHttpServer(ctx context.Context, name, addr string, log zerolog.Logger, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
 	server = &HttpServer{
+		name: name,
 		addr: addr,
+		log:  log.With().Str("component", "http/"+name).Logger(),
 
 		router: gin.New(),
 	}
@@ -55,6 +60,11 @@ func NewHttpServer(ctx context.Context, addr string, middlewares ...gin.HandlerF
 }
 
 func (server *HttpServer) Start() error {
+	routes := server.router.Routes()
+	for _, route := range routes {
+		server.log.Trace().Str("method", route.Method).Str("path", route.Path).Msg("route registered")
+	}
+
 	return server.router.Run(server.addr)
 }
 
@@ -83,4 +93,13 @@ func (server *HttpServer) RegisterRouteGroup(group RoutingGroup) error {
 
 func (server *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	server.router.ServeHTTP(w, req)
+}
+
+// info functions
+func (server *HttpServer) Name() string {
+	return server.name
+}
+
+func (server *HttpServer) Address() string {
+	return server.addr
 }

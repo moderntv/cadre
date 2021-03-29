@@ -25,7 +25,6 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/moderntv/cadre/http"
-	"github.com/moderntv/cadre/http/middleware"
 	"github.com/moderntv/cadre/http/responses"
 	"github.com/moderntv/cadre/metrics"
 	"github.com/moderntv/cadre/status"
@@ -46,14 +45,14 @@ type Builder struct {
 	statusHttpServerAddr string
 	statusPath           string
 
-	// prometheus
-	metrics                  *metrics.Registry
-	prometheusRegistry       *prometheus.Registry
-	prometheusHttpServerAddr string
-	prometheusPath           string
+	// metrics
+	metrics               *metrics.Registry
+	prometheusRegistry    *prometheus.Registry
+	metricsHttpServerAddr string
+	metricsPath           string
 
 	grpcOptions *grpcOptions
-	httpOptions *httpOptions
+	httpOptions []*httpOptions
 }
 
 // NewBuilder creates a new Builder instance and allows the user to configure the Cadre server by various options
@@ -62,8 +61,11 @@ func NewBuilder(name string, options ...Option) (b *Builder, err error) {
 		name: name,
 		ctx:  context.Background(),
 
-		statusPath:     "/status",
-		prometheusPath: "/metrics",
+		statusPath:  "/status",
+		metricsPath: "/metrics",
+
+		grpcOptions: nil,
+		httpOptions: nil,
 	}
 
 	for _, option := range options {
@@ -95,7 +97,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 		status:  b.status,
 		metrics: b.metrics,
 
-		httpServers: make(map[string]*httpServer),
+		httpServers: make(map[string]*stdhttp.Server),
 	}
 
 	if b.httpOptions == nil && b.grpcOptions == nil {
@@ -103,30 +105,70 @@ func (b *Builder) Build() (c *cadre, err error) {
 		return
 	}
 
+	// extra http services init
+	if b.metricsHttpServerAddr != "" {
+		WithHTTP("metrics_http",
+			WithHTTPListeningAddress(b.metricsHttpServerAddr),
+			WithRoute("GET", b.metricsPath, gin.WrapH(promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}))),
+		)(b)
+	}
+
+	if b.statusHttpServerAddr != "" {
+		WithHTTP("status_http",
+			WithHTTPListeningAddress(b.statusHttpServerAddr),
+			WithRoute("GET", b.statusPath, func(c *gin.Context) {
+				report := b.status.Report()
+				if report.Status == status.OK {
+					responses.Ok(c, report)
+					return
+				}
+
+				c.AbortWithStatusJSON(503, gin.H{
+					"data": report,
+				})
+			}),
+		)(b)
+	}
+
+	if b.grpcOptions != nil && b.grpcOptions.enableChannelz {
+		channelzHandler := channelz.CreateHandler("/", b.grpcOptions.listeningAddress)
+
+		WithHTTP("channelz_http",
+			WithHTTPListeningAddress(b.grpcOptions.channelzHttpAddr),
+			WithRoute("GET", "/channelz/*path", func(c *gin.Context) {
+				channelzHandler.ServeHTTP(c.Writer, c.Request)
+			}),
+		)(b)
+	}
+
 	// create and configure grpc server
 	if b.grpcOptions != nil {
 		err = b.buildGrpc(c)
 		if err != nil {
-			err = fmt.Errorf("grpc server building failed: ", err)
+			err = fmt.Errorf("grpc server building failed: %w", err)
 			return
+		}
+
+		if b.grpcOptions.enableChannelz {
+			channelz_service.RegisterChannelzServiceToServer(c.grpcServer)
 		}
 	}
 
 	// create and configure http server
-	var httpServer *http.HttpServer
+	var httpServers map[string]*http.HttpServer
 	if b.httpOptions != nil {
-		httpServer, err = b.buildHttp(c, ctx)
+		httpServers, err = b.buildHttp(c, ctx)
+		if err != nil {
+			return
+		}
 	}
 
-	if b.prometheusHttpServerAddr != "" {
-		c.prometheusAddr = b.prometheusHttpServerAddr
-		m := b.getHttpMux(c, c.prometheusAddr, "prometheus")
-		m.Handle(b.prometheusPath, promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}))
-	}
+	c.httpServers = map[string]*stdhttp.Server{}
+	for addr, httpServer := range httpServers {
+		var h stdhttp.Handler = httpServer
 
-	if httpServer != nil || (b.grpcOptions != nil && b.grpcOptions.multiplexWithHTTP) {
-		var h stdhttp.Handler
-		if b.grpcOptions != nil && b.grpcOptions.multiplexWithHTTP {
+		// http+grpc multiplexing
+		if b.grpcOptions != nil && b.grpcOptions.listeningAddress == addr {
 			h = stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 				log.Printf("handling http request. protomajor = %v; content-type = %v; headers = %v", r.ProtoMajor, r.Header.Get("content-type"), r.Header)
 				if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
@@ -135,13 +177,13 @@ func (b *Builder) Build() (c *cadre, err error) {
 					httpServer.ServeHTTP(w, r)
 				}
 			})
-		} else {
-			// no multiplexing => use gin "directly"
-			h = httpServer
+
+			log.Println("disable grpcListener")
+			c.grpcListener = nil
 		}
 
-		c.httpServer = &stdhttp.Server{
-			Addr:    b.httpOptions.listeningAddress,
+		c.httpServers[addr] = &stdhttp.Server{
+			Addr:    addr,
 			Handler: h,
 		}
 	}
@@ -152,7 +194,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 func (b *Builder) ensure() (err error) {
 	// check prometheus & metrics. ensure they use the same prometheus registry
 	if b.metrics != nil && b.prometheusRegistry != nil {
-		err = fmt.Errorf("pass either existing metrics.Registry or prometheus.Registry")
+		err = fmt.Errorf("pass either existing metrics.Registry or prometheus.Registry. not both")
 		return
 	}
 	// initialize metrics
@@ -180,18 +222,27 @@ func (b *Builder) ensure() (err error) {
 			return
 		}
 	}
+
 	// http checks
-	if b.httpOptions != nil {
-		err = b.httpOptions.ensure()
+	for _, httpServerOptions := range b.httpOptions {
+		err = httpServerOptions.ensure()
 		if err != nil {
 			return
 		}
 	}
 
-	// http + grpc checks
-	if b.grpcOptions != nil && b.grpcOptions.multiplexWithHTTP && b.httpOptions == nil {
-		err = fmt.Errorf("grpc set to be multiplexed with http, but no http server will be created")
-		return
+	// configure metrics + status endpoint http servers
+	if len(b.httpOptions) >= 1 {
+		if b.statusHttpServerAddr == "" {
+			b.statusHttpServerAddr = b.httpOptions[0].listeningAddress
+		}
+		if b.metricsHttpServerAddr == "" {
+			b.metricsHttpServerAddr = b.httpOptions[0].listeningAddress
+		}
+
+		if b.grpcOptions != nil && b.grpcOptions.multiplexWithHTTP {
+			b.grpcOptions.listeningAddress = b.httpOptions[0].listeningAddress
+		}
 	}
 
 	return
@@ -263,27 +314,13 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 		reflection.Register(c.grpcServer)
 	}
 
-	// channelz
-	if b.grpcOptions.enableChannelz {
-		channelz_service.RegisterChannelzServiceToServer(c.grpcServer)
-
-		grpcAddr := b.grpcOptions.listeningAddress
-		if b.grpcOptions.multiplexWithHTTP {
-			grpcAddr = b.httpOptions.listeningAddress
-		}
-
-		m := b.getHttpMux(c, b.grpcOptions.channelzHttpAddr, "channelz")
-		m.Handle("/", channelz.CreateHandler("/", grpcAddr))
-		c.channelzAddr = b.grpcOptions.channelzHttpAddr
-	}
-
 	// user-specified grpc services
 	for _, registrator := range b.grpcOptions.services {
 		registrator(c.grpcServer)
 	}
 
 	// grpc listener
-	if b.grpcOptions.listeningAddress != "" {
+	if b.grpcOptions.listeningAddress != "" && !b.grpcOptions.multiplexWithHTTP {
 		c.grpcListener, err = net.Listen("tcp", b.grpcOptions.listeningAddress)
 		if err != nil {
 			return
@@ -293,70 +330,31 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	return
 }
 
-func (b *Builder) buildHttp(c *cadre, cadreContext context.Context) (httpServer *http.HttpServer, err error) {
-	c.httpAddr = b.httpOptions.listeningAddress
+func (b *Builder) buildHttp(c *cadre, cadreContext context.Context) (httpServers map[string]*http.HttpServer, err error) {
+	httpServers = map[string]*http.HttpServer{}
 
-	metricsMiddleware, err := middleware.NewMetrics(b.metrics, "main_http")
-	if err != nil {
-		return
-	}
-
-	middlewares := append([]gin.HandlerFunc{
-		metricsMiddleware,
-		middleware.NewLogger(*b.logger),
-		gin.Recovery(),
-	}, b.httpOptions.globalMiddleware...)
-
-	httpServer, err = http.NewHttpServer(cadreContext, b.httpOptions.listeningAddress, middlewares...)
-	if err != nil {
-		return
-	}
-
-	for _, group := range b.httpOptions.routingGroups {
-		httpServer.RegisterRouteGroup(group)
-	}
-
-	// prometheus
-	if b.prometheusHttpServerAddr == "" {
-		// empty prometheus listening address => listen in main http server
-		httpServer.RegisterRoute(b.prometheusPath, "GET", gin.WrapH(promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{})))
-	}
-	if b.statusHttpServerAddr == "" {
-		httpServer.RegisterRoute(b.statusPath, "GET", func(c *gin.Context) {
-			report := b.status.Report()
-			if report.Status == status.OK {
-				responses.Ok(c, report)
+	mergedHttpOptions := map[string]*httpOptions{}
+	for _, newServer := range b.httpOptions {
+		addr := newServer.listeningAddress
+		if existingServer, ok := mergedHttpOptions[addr]; ok {
+			mergedHttpOptions[addr], err = existingServer.merge(newServer)
+			if err != nil {
 				return
 			}
 
-			c.AbortWithStatusJSON(503, gin.H{
-				"data": report,
-			})
-		})
+			continue
+		}
+
+		mergedHttpOptions[newServer.listeningAddress] = newServer
+	}
+
+	for _, httpOptions := range mergedHttpOptions {
+		httpServers[httpOptions.listeningAddress], err = httpOptions.build(cadreContext, *b.logger, b.metrics)
+
+		if err != nil {
+			return
+		}
 	}
 
 	return
-}
-
-func (b *Builder) getHttpMux(c *cadre, listen string, serviceName string) *stdhttp.ServeMux {
-	hServer, ok := c.httpServers[listen]
-	if ok {
-		hServer.Services = append(hServer.Services, serviceName)
-		return hServer.Mux
-	}
-
-	mux := stdhttp.NewServeMux()
-	server := &stdhttp.Server{
-		Addr:    listen,
-		Handler: mux,
-	}
-
-	hServer = &httpServer{
-		Services: []string{serviceName},
-		Server:   server,
-		Mux:      mux,
-	}
-
-	c.httpServers[listen] = hServer
-	return mux
 }

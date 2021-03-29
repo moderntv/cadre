@@ -11,7 +11,8 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion6
+// Requires gRPC-Go v1.32.0 or later.
+const _ = grpc.SupportPackageIsVersion7
 
 // GreeterServiceClient is the client API for GreeterService service.
 //
@@ -38,20 +39,31 @@ func (c *greeterServiceClient) SayHi(ctx context.Context, in *GreetingRequest, o
 }
 
 // GreeterServiceServer is the server API for GreeterService service.
+// All implementations must embed UnimplementedGreeterServiceServer
+// for forward compatibility
 type GreeterServiceServer interface {
 	SayHi(context.Context, *GreetingRequest) (*GreetingResponse, error)
+	mustEmbedUnimplementedGreeterServiceServer()
 }
 
-// UnimplementedGreeterServiceServer can be embedded to have forward compatible implementations.
+// UnimplementedGreeterServiceServer must be embedded to have forward compatible implementations.
 type UnimplementedGreeterServiceServer struct {
 }
 
-func (*UnimplementedGreeterServiceServer) SayHi(context.Context, *GreetingRequest) (*GreetingResponse, error) {
+func (UnimplementedGreeterServiceServer) SayHi(context.Context, *GreetingRequest) (*GreetingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SayHi not implemented")
 }
+func (UnimplementedGreeterServiceServer) mustEmbedUnimplementedGreeterServiceServer() {}
 
-func RegisterGreeterServiceServer(s *grpc.Server, srv GreeterServiceServer) {
-	s.RegisterService(&_GreeterService_serviceDesc, srv)
+// UnsafeGreeterServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to GreeterServiceServer will
+// result in compilation errors.
+type UnsafeGreeterServiceServer interface {
+	mustEmbedUnimplementedGreeterServiceServer()
+}
+
+func RegisterGreeterServiceServer(s grpc.ServiceRegistrar, srv GreeterServiceServer) {
+	s.RegisterService(&GreeterService_ServiceDesc, srv)
 }
 
 func _GreeterService_SayHi_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -72,7 +84,10 @@ func _GreeterService_SayHi_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-var _GreeterService_serviceDesc = grpc.ServiceDesc{
+// GreeterService_ServiceDesc is the grpc.ServiceDesc for GreeterService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var GreeterService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "example.GreeterService",
 	HandlerType: (*GreeterServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

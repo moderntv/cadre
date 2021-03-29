@@ -46,7 +46,7 @@ func defaultGRPCOptions() *grpcOptions {
 		enableLoggingMiddleware:  true,
 		enableHealthService:      true,
 		enableReflection:         true,
-		enableChannelz:           true,
+		enableChannelz:           false,
 		channelzHttpAddr:         ":8192",
 		extraUnaryInterceptors:   []grpc.UnaryServerInterceptor{},
 		extraStreamInterceptors:  []grpc.StreamServerInterceptor{},
@@ -144,10 +144,14 @@ func WithoutReflection() GRPCOption {
 	}
 }
 
-// WithoutChannelz disables gRPC's channelz http server
-func WithoutChannelz() GRPCOption {
+// WithChannelz enables gRPC's channelz http server and configures its listening address
+// if the listening address is left empty, it will use the default value (:8123)
+func WithChannelz(listenAddr string) GRPCOption {
 	return func(g *grpcOptions) error {
-		g.enableChannelz = false
+		g.enableChannelz = true
+		if listenAddr != "" {
+			g.channelzHttpAddr = listenAddr
+		}
 
 		return nil
 	}
@@ -166,15 +170,6 @@ func WithoutRecovery() GRPCOption {
 func WithRecoveryOptions(opts []grpc_recovery.Option) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.recoveryMiddlewareOptions = opts
-
-		return nil
-	}
-}
-
-// WithChannelzListeningAddress configures the channelz's listening address
-func WithChannelzListeningAddress(listenAddr string) GRPCOption {
-	return func(g *grpcOptions) error {
-		g.channelzHttpAddr = listenAddr
 
 		return nil
 	}

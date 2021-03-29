@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/moderntv/cadre"
-	"github.com/moderntv/cadre/_example/greeter"
-	greeter_pb "github.com/moderntv/cadre/_example/proto/greeter"
+	"github.com/moderntv/cadre/_examples/greeter"
+	greeter_pb "github.com/moderntv/cadre/_examples/proto/greeter"
 )
 
 func main() {

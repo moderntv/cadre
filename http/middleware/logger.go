@@ -13,13 +13,16 @@ func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
 
 	return func(c *gin.Context) {
 		start := time.Now()
+
 		c.Next()
+
 		latency := time.Since(start)
 		path := c.Request.URL.Path
+
 		dumplogger := logger.With().
 			Str("method", c.Request.Method).
 			Str("path", path).
-			Dur("latency_ns", latency).
+			Dur("latency_ns", latency/time.Nanosecond).
 			Int("status_code", c.Writer.Status()).
 			Str("ip", c.ClientIP()).Logger()
 

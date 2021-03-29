@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	greeter_pb "github.com/moderntv/cadre/_example/proto/greeter"
+	greeter_pb "github.com/moderntv/cadre/_examples/proto/greeter"
 )
 
 type GreeterService struct {

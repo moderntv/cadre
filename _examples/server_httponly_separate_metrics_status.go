@@ -21,6 +21,8 @@ func main() {
 	b, err := cadre.NewBuilder(
 		"example",
 		cadre.WithLogger(&logger),
+		cadre.WithMetricsListeningAddress(":7000"),
+		cadre.WithStatusListeningAddress(":7000"),
 		cadre.WithHTTP(
 			"main_http",
 			cadre.WithHTTPListeningAddress(":8000"),

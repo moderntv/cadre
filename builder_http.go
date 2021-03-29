@@ -1,27 +1,105 @@
 package cadre
 
 import (
+	"context"
 	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 
 	"github.com/moderntv/cadre/http"
+	"github.com/moderntv/cadre/http/middleware"
+	"github.com/moderntv/cadre/metrics"
 )
 
 // HTTP Options
 type httpOptions struct {
+	serverName       string
+	services         []string
 	listeningAddress string
+
+	enableLoggingMiddleware bool
+	enableMetricsMiddleware bool
 
 	globalMiddleware []gin.HandlerFunc
 	routingGroups    map[string]http.RoutingGroup
 }
 
-func (g *httpOptions) ensure() (err error) {
+func (h *httpOptions) ensure() (err error) {
+	if h.listeningAddress == "" {
+		return fmt.Errorf("no listening address for http server `%s`", h.serverName)
+	}
+
+	return
+}
+func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
+	log.Printf("merging %s into %s", other.serverName, h.serverName)
+
+	hh = &httpOptions{
+		serverName:       h.serverName,
+		services:         append(h.services, other.services...),
+		listeningAddress: h.listeningAddress,
+
+		enableLoggingMiddleware: h.enableLoggingMiddleware,
+		enableMetricsMiddleware: h.enableMetricsMiddleware,
+
+		globalMiddleware: append(h.globalMiddleware, other.globalMiddleware...),
+		routingGroups:    h.routingGroups,
+	}
+
+	for _, othersRoutingGroup := range other.routingGroups {
+		err = WithRoutingGroup(othersRoutingGroup)(hh)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func (h *httpOptions) build(cadreContext context.Context, logger zerolog.Logger, metricsRegistry *metrics.Registry) (httpServer *http.HttpServer, err error) {
+	var serverMiddlewares = []gin.HandlerFunc{}
+	{
+		if h.enableMetricsMiddleware {
+			var metricsMiddleware gin.HandlerFunc
+			metricsMiddleware, err = middleware.NewMetrics(metricsRegistry, h.serverName)
+			if err != nil {
+				return
+			}
+
+			serverMiddlewares = append(serverMiddlewares, metricsMiddleware)
+		}
+
+		if h.enableLoggingMiddleware {
+			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger))
+		}
+
+		serverMiddlewares = append(serverMiddlewares, gin.Recovery())
+		serverMiddlewares = append(serverMiddlewares, h.globalMiddleware...)
+	}
+
+	httpServer, err = http.NewHttpServer(cadreContext, h.serverName, h.listeningAddress, logger, serverMiddlewares...)
+	if err != nil {
+		return
+	}
+
+	for _, group := range h.routingGroups {
+		err = httpServer.RegisterRouteGroup(group)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
 func defaultHTTPOptions() *httpOptions {
 	return &httpOptions{
+		services:                []string{},
+		enableLoggingMiddleware: true,
+		enableMetricsMiddleware: true,
+
 		globalMiddleware: []gin.HandlerFunc{},
 		routingGroups:    map[string]http.RoutingGroup{},
 	}
@@ -30,18 +108,24 @@ func defaultHTTPOptions() *httpOptions {
 type HTTPOption func(*httpOptions) error
 
 // WithHTTP enables HTTP server
-func WithHTTP(httpOptions ...HTTPOption) Option {
+func WithHTTP(serverName string, myHttpOptions ...HTTPOption) Option {
 	return func(options *Builder) error {
 		if options.httpOptions == nil {
-			options.httpOptions = defaultHTTPOptions()
+			options.httpOptions = []*httpOptions{}
 		}
 
-		for _, option := range httpOptions {
-			err := option(options.httpOptions)
+		thisHttpServerOptions := defaultHTTPOptions()
+		thisHttpServerOptions.serverName = serverName
+		thisHttpServerOptions.services = append(thisHttpServerOptions.services, serverName)
+
+		for _, option := range myHttpOptions {
+			err := option(thisHttpServerOptions)
 			if err != nil {
 				return err
 			}
 		}
+
+		options.httpOptions = append(options.httpOptions, thisHttpServerOptions)
 
 		return nil
 	}
@@ -69,24 +153,14 @@ func WithGlobalMiddleware(middlware ...gin.HandlerFunc) HTTPOption {
 // WithRoute adds new route to the HTTP server
 // returns an error if the path-method combo is already registered
 func WithRoute(method, path string, handlers ...gin.HandlerFunc) HTTPOption {
-	return func(h *httpOptions) error {
-		_, ok := h.routingGroups[""]
-		if !ok {
-			h.routingGroups[""] = http.RoutingGroup{Base: "", Routes: map[string]map[string][]gin.HandlerFunc{}}
-		}
-		_, ok = h.routingGroups[""].Routes[path]
-		if !ok {
-			h.routingGroups[""].Routes[path] = map[string][]gin.HandlerFunc{}
-		}
-		_, ok = h.routingGroups[""].Routes[path][method]
-		if ok {
-			return fmt.Errorf("path already registered")
-		}
-
-		h.routingGroups[""].Routes[path][method] = handlers
-
-		return nil
-	}
+	return WithRoutingGroup(http.RoutingGroup{
+		Base: "",
+		Routes: map[string]map[string][]gin.HandlerFunc{
+			path: {
+				method: handlers,
+			},
+		},
+	})
 }
 
 // WithRoutingGroup adds a new routing group to the HTTP server
@@ -110,14 +184,28 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 
 			for method, handlers := range methodHandlers {
 				_, ok = h.routingGroups[group.Base].Routes[path][method]
-				if !ok {
-					h.routingGroups[group.Base].Routes[path][method] = []gin.HandlerFunc{}
+				if ok {
+					return fmt.Errorf("conflicting path already registered: path = `%s`; method = `%s`", path, method)
 				}
 
-				h.routingGroups[group.Base].Routes[path][method] = append(h.routingGroups[group.Base].Routes[path][method], handlers...)
+				h.routingGroups[group.Base].Routes[path][method] = handlers
 			}
 		}
 
+		return nil
+	}
+}
+
+func WithoutLoggingMiddleware() HTTPOption {
+	return func(h *httpOptions) error {
+		h.enableLoggingMiddleware = false
+		return nil
+	}
+}
+
+func WithoutMetricsMiddleware() HTTPOption {
+	return func(h *httpOptions) error {
+		h.enableMetricsMiddleware = false
 		return nil
 	}
 }
