@@ -84,7 +84,7 @@ type ComponentStatus interface {
 
 type componentStatus struct {
 	mu         sync.RWMutex
-	CStatus    StatusType `json:"status,omitempty"`
+	CStatus    StatusType `json:"status"`
 	CMessage   string     `json:"message,omitempty"`
 	CUpdatedAt time.Time  `json:"updated_at,omitempty"`
 }
