@@ -13,6 +13,12 @@ type RoutingGroup struct {
 	Middleware []gin.HandlerFunc
 	Routes     map[string]map[string][]gin.HandlerFunc // path:method:handlers
 	Groups     []RoutingGroup
+	Static     []StaticRoute
+}
+
+type StaticRoute struct {
+	Path string
+	Root string
 }
 
 func (rg RoutingGroup) Register(registrator grouper) (err error) {
@@ -22,6 +28,10 @@ func (rg RoutingGroup) Register(registrator grouper) (err error) {
 		for method, handlers := range methodHandlers {
 			g.Handle(method, path, handlers...)
 		}
+	}
+
+	for _, staticRoute := range rg.Static {
+		g.Static(staticRoute.Path, staticRoute.Root)
 	}
 
 	for _, subGroup := range rg.Groups {

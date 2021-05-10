@@ -201,6 +201,7 @@ func mergeRoutingGroups(old, _new http.RoutingGroup) (merged http.RoutingGroup, 
 	var ok bool
 	// TODO: deduplicate middleware
 	old.Middleware = append(old.Middleware, _new.Middleware...)
+	old.Static = append(old.Static, _new.Static...)
 
 	for path, methodHandlers := range _new.Routes {
 		_, ok = old.Routes[path]
