@@ -1,6 +1,8 @@
 package http
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 type grouper interface {
 	Group(path string, handlers ...gin.HandlerFunc) *gin.RouterGroup

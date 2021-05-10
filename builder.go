@@ -38,7 +38,7 @@ type Builder struct {
 	ctx context.Context
 
 	// logging
-	logger *zerolog.Logger
+	logger zerolog.Logger
 
 	// status
 	status               *status.Status
@@ -60,6 +60,8 @@ func NewBuilder(name string, options ...Option) (b *Builder, err error) {
 	b = &Builder{
 		name: name,
 		ctx:  context.Background(),
+
+		logger: zerolog.Nop(),
 
 		statusPath:  "/status",
 		metricsPath: "/metrics",
@@ -93,7 +95,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
 
-		logger:  *b.logger,
+		logger:  b.logger,
 		status:  b.status,
 		metrics: b.metrics,
 
@@ -165,6 +167,8 @@ func (b *Builder) Build() (c *cadre, err error) {
 
 	c.httpServers = map[string]*stdhttp.Server{}
 	for addr, httpServer := range httpServers {
+		httpServer.LogRegisteredRoutes()
+
 		var h stdhttp.Handler = httpServer
 
 		// http+grpc multiplexing
@@ -207,10 +211,6 @@ func (b *Builder) ensure() (err error) {
 	}
 
 	// basic checks
-	if b.logger == nil {
-		l := zerolog.Nop()
-		b.logger = &l
-	}
 	if b.status == nil {
 		b.status = status.NewStatus("TODO")
 	}
@@ -265,12 +265,12 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 		unaryInterceptors = append(
 			unaryInterceptors,
 			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			grpc_zerolog.UnaryServerInterceptor(*b.logger, b.grpcOptions.loggingMiddlewareOptions...),
+			grpc_zerolog.UnaryServerInterceptor(b.logger, b.grpcOptions.loggingMiddlewareOptions...),
 		)
 		streamInterceptors = append(
 			streamInterceptors,
 			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			grpc_zerolog.StreamServerInterceptor(*b.logger, b.grpcOptions.loggingMiddlewareOptions...),
+			grpc_zerolog.StreamServerInterceptor(b.logger, b.grpcOptions.loggingMiddlewareOptions...),
 		)
 	}
 
@@ -349,7 +349,7 @@ func (b *Builder) buildHttp(c *cadre, cadreContext context.Context) (httpServers
 	}
 
 	for _, httpOptions := range mergedHttpOptions {
-		httpServers[httpOptions.listeningAddress], err = httpOptions.build(cadreContext, *b.logger, b.metrics)
+		httpServers[httpOptions.listeningAddress], err = httpOptions.build(cadreContext, b.logger, b.metrics)
 
 		if err != nil {
 			return

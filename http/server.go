@@ -45,11 +45,6 @@ func NewHttpServer(ctx context.Context, name, addr string, log zerolog.Logger, m
 }
 
 func (server *HttpServer) Start() error {
-	routes := server.router.Routes()
-	for _, route := range routes {
-		server.log.Trace().Str("method", route.Method).Str("path", route.Path).Msg("route registered")
-	}
-
 	return server.router.Run(server.addr)
 }
 
@@ -80,4 +75,11 @@ func (server *HttpServer) Name() string {
 
 func (server *HttpServer) Address() string {
 	return server.addr
+}
+
+func (server *HttpServer) LogRegisteredRoutes() {
+	routes := server.router.Routes()
+	for _, route := range routes {
+		server.log.Trace().Str("method", route.Method).Str("path", route.Path).Msg("route registered")
+	}
 }

@@ -166,30 +166,16 @@ func WithRoute(method, path string, handlers ...gin.HandlerFunc) HTTPOption {
 // WithRoutingGroup adds a new routing group to the HTTP server
 // may cause gin configuration eror at runtime. use with care
 func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
-	return func(h *httpOptions) error {
+	return func(h *httpOptions) (err error) {
 		g, ok := h.routingGroups[group.Base]
 		if !ok {
 			h.routingGroups[group.Base] = group
 			return nil
 		}
 
-		// TODO: middleware
-		g.Middleware = append(h.routingGroups[group.Base].Middleware, group.Middleware...)
-
-		for path, methodHandlers := range group.Routes {
-			_, ok = h.routingGroups[group.Base].Routes[path]
-			if !ok {
-				h.routingGroups[group.Base].Routes[path] = map[string][]gin.HandlerFunc{}
-			}
-
-			for method, handlers := range methodHandlers {
-				_, ok = h.routingGroups[group.Base].Routes[path][method]
-				if ok {
-					return fmt.Errorf("conflicting path already registered: path = `%s`; method = `%s`", path, method)
-				}
-
-				h.routingGroups[group.Base].Routes[path][method] = handlers
-			}
+		h.routingGroups[group.Base], err = mergeRoutingGroups(g, group)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -208,4 +194,50 @@ func WithoutMetricsMiddleware() HTTPOption {
 		h.enableMetricsMiddleware = false
 		return nil
 	}
+}
+
+// ---------------------------------------------------------------
+func mergeRoutingGroups(old, _new http.RoutingGroup) (merged http.RoutingGroup, err error) {
+	var ok bool
+	// TODO: deduplicate middleware
+	old.Middleware = append(old.Middleware, _new.Middleware...)
+
+	for path, methodHandlers := range _new.Routes {
+		_, ok = old.Routes[path]
+		if !ok {
+			old.Routes[path] = map[string][]gin.HandlerFunc{}
+		}
+
+		for method, handlers := range methodHandlers {
+			_, ok = old.Routes[path][method]
+			if ok {
+				err = fmt.Errorf("conflicting path already registered: path = `%s`; method = `%s`", path, method)
+				return
+			}
+
+			old.Routes[path][method] = handlers
+		}
+	}
+
+outer_loop:
+	for _, newSubGroup := range _new.Groups {
+		for i, oldSubGroup := range old.Groups {
+			if oldSubGroup.Base != newSubGroup.Base {
+				continue // not it => try next
+			}
+
+			old.Groups[i], err = mergeRoutingGroups(oldSubGroup, newSubGroup)
+			if err != nil {
+				return
+			}
+
+			continue outer_loop // merged => continue with new newSubGroup
+		}
+
+		old.Groups = append(old.Groups, newSubGroup)
+	}
+
+	merged = old
+
+	return
 }

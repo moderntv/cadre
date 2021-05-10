@@ -22,7 +22,7 @@ func WithContext(ctx context.Context) Option {
 
 // WithLogger allows configuring cadre with custom zerolog logger.
 // If not used Cadre will be configured with zerolog.Nop()
-func WithLogger(logger *zerolog.Logger) Option {
+func WithLogger(logger zerolog.Logger) Option {
 	return func(options *Builder) error {
 		options.logger = logger
 
