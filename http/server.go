@@ -10,12 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type RoutingGroup struct {
-	Base       string
-	Middleware []gin.HandlerFunc
-	Routes     map[string]map[string][]gin.HandlerFunc // path:method:handlers
-}
-
 type HttpServer struct {
 	name string
 	addr string
@@ -39,15 +33,6 @@ func NewHttpServer(ctx context.Context, name, addr string, log zerolog.Logger, m
 
 	server.router.Use(middlewares...)
 
-	// CORS example
-	// // g.Use(cors.Default())
-	// corsConfig := cors.DefaultConfig()
-	// // corsConfig.AllowOrigins = config.Config.Cors.AllowOrigins
-	// corsConfig.AllowAllOrigins = true
-	// corsConfig.AllowMethods = config.Config.Cors.AllowMethods
-	// corsConfig.AllowHeaders = config.Config.Cors.AllowHeaders
-	// corsConfig.AllowCredentials = config.Config.Cors.AllowCredentials
-	// g.Use(cors.New(corsConfig))
 	server.router.NoRoute(func(c *gin.Context) {
 		responses.NotFound(c, responses.Error{
 			Type:    "NO_ROUTE",
@@ -81,14 +66,7 @@ func (server *HttpServer) RegisterRoute(path, method string, handlers ...gin.Han
 }
 
 func (server *HttpServer) RegisterRouteGroup(group RoutingGroup) error {
-	g := server.router.Group(group.Base, group.Middleware...)
-	for path, methodHandlers := range group.Routes {
-		for method, handlers := range methodHandlers {
-			g.Handle(method, path, handlers...)
-		}
-	}
-
-	return nil
+	return group.Register(server.router)
 }
 
 func (server *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
