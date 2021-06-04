@@ -117,6 +117,40 @@ func TestStatus_Report(t *testing.T) {
 			},
 			overallStatusFinal: ERROR,
 		},
+		{
+			name:     "warning",
+			status:   NewStatus("v6.6.6"),
+			services: []string{"foo", "bar"},
+			servicesChanges: []map[string]serviceStatus{
+				{
+					"foo": {OK, "OK"},
+					"bar": {WARN, "Minor failure"},
+				},
+			},
+			servicesFinal: map[string]StatusType{
+				"foo": OK,
+				"bar": WARN,
+			},
+			overallStatusFinal: WARN,
+		},
+		{
+			name:     "warning-error",
+			status:   NewStatus("v6.6.6"),
+			services: []string{"foo", "bar", "meh"},
+			servicesChanges: []map[string]serviceStatus{
+				{
+					"foo": {OK, "OK"},
+					"meh": {WARN, "Meh failure"},
+					"bar": {ERROR, "Major failure"},
+				},
+			},
+			servicesFinal: map[string]StatusType{
+				"foo": OK,
+				"meh": WARN,
+				"bar": ERROR,
+			},
+			overallStatusFinal: ERROR,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
