@@ -27,7 +27,7 @@ func main() {
 
 	b, err := cadre.NewBuilder(
 		"example",
-		cadre.WithLogger(&logger),
+		cadre.WithLogger(logger),
 		cadre.WithGRPC(
 			cadre.WithGRPCListeningAddress(":9000"),
 			cadre.WithService("example.GreeterService", greeterRegistrator),

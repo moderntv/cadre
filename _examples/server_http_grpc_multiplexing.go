@@ -38,7 +38,7 @@ func main() {
 
 	b, err := cadre.NewBuilder(
 		"example",
-		cadre.WithLogger(&logger),
+		cadre.WithLogger(logger),
 		cadre.WithGRPC(
 			cadre.WithGRPCMultiplex(),
 			cadre.WithService("example.GreeterService", greeterRegistrator),
