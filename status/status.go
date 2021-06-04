@@ -65,9 +65,13 @@ func (s *Status) Report() (report Report) {
 		}
 	}
 	for _, s := range report.Components {
-		if s.Status() == ERROR {
+		status := s.Status()
+		if status == ERROR {
 			report.Status = ERROR
 			break
+		}
+		if status == WARN {
+			report.Status = WARN
 		}
 	}
 
