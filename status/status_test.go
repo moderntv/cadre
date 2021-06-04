@@ -21,7 +21,7 @@ func TestNewStatus(t *testing.T) {
 			},
 			want: &Status{
 				version:    "v6.6.6",
-				components: map[string]*componentStatus{},
+				components: map[string]*ComponentStatus{},
 			},
 		},
 	}
@@ -155,7 +155,7 @@ func TestStatus_Report(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// register services
-			componentStatuses := map[string]ComponentStatus{}
+			componentStatuses := map[string]*ComponentStatus{}
 			for _, service := range tt.services {
 				var err error
 				componentStatuses[service], err = tt.status.Register(service)
@@ -177,8 +177,8 @@ func TestStatus_Report(t *testing.T) {
 			for service, finalStatus := range tt.servicesFinal {
 				serviceStatus := gotReport.Components[service]
 
-				if serviceStatus.Status() != finalStatus {
-					t.Errorf("incorrect service status. got = %v, want = %v", serviceStatus.Status(), finalStatus)
+				if serviceStatus.Status != finalStatus {
+					t.Errorf("incorrect service status. got = %v, want = %v", serviceStatus.Status, finalStatus)
 				}
 			}
 			// check overall status

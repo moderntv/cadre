@@ -6,71 +6,71 @@ import (
 	"time"
 )
 
-type Status struct {
-	version string
-
-	cmu        sync.RWMutex
-	components map[string]*componentStatus
+type ComponentReport struct {
+	Status    StatusType `json:"status"`
+	Message   string     `json:"message,omitempty"`
+	UpdatedAt time.Time  `json:"updated_at,omitempty"`
 }
-
 type Report struct {
 	Version    string                     `json:"version"`
 	Status     StatusType                 `json:"status"`
-	Components map[string]componentStatus `json:"components"`
+	Components map[string]ComponentReport `json:"components"`
+}
+
+type Status struct {
+	version string
+
+	mu         sync.RWMutex
+	components map[string]*ComponentStatus
 }
 
 func NewStatus(version string) (status *Status) {
 	status = &Status{
 		version:    version,
-		components: map[string]*componentStatus{},
+		components: make(map[string]*ComponentStatus),
 	}
 
 	return
 }
 
-func (s *Status) Register(name string) (cs ComponentStatus, err error) {
-	s.cmu.Lock()
-	defer s.cmu.Unlock()
+func (s *Status) Register(name string) (cs *ComponentStatus, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if _, ok := s.components[name]; ok {
 		err = errors.New("component already registered")
 		return
 	}
 
-	lcs := &componentStatus{
-		CStatus:  ERROR,
-		CMessage: "uninitialized",
+	cs = &ComponentStatus{
+		status:  ERROR,
+		message: "uninitialized",
 	}
-	s.components[name] = lcs
-	cs = lcs
+	s.components[name] = cs
 
 	return
 }
 
 func (s *Status) Report() (report Report) {
-	s.cmu.RLock()
-	defer s.cmu.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	report.Version = s.version
 	report.Status = OK
-	report.Components = map[string]componentStatus{}
+	report.Components = make(map[string]ComponentReport)
 	for n, cs := range s.components {
-		if cs == nil {
-			continue
-		}
-
-		report.Components[n] = componentStatus{
-			CStatus:    cs.Status(),
-			CMessage:   cs.Message(),
-			CUpdatedAt: cs.LastUpdate(),
+		report.Components[n] = ComponentReport{
+			Status:    cs.Status(),
+			Message:   cs.Message(),
+			UpdatedAt: cs.LastUpdate(),
 		}
 	}
 	for _, s := range report.Components {
-		status := s.Status()
-		if status == ERROR {
+		if s.Status == ERROR {
 			report.Status = ERROR
 			break
 		}
-		if status == WARN {
+		if s.Status == WARN {
 			report.Status = WARN
 		}
 	}
@@ -78,41 +78,37 @@ func (s *Status) Report() (report Report) {
 	return
 }
 
-type ComponentStatus interface {
-	SetStatus(statusType StatusType, message string)
-	// getters
-	Status() StatusType
-	Message() string
-	LastUpdate() time.Time
+type ComponentStatus struct {
+	mu        sync.RWMutex
+	status    StatusType
+	message   string
+	updatedAt time.Time
 }
 
-type componentStatus struct {
-	mu         sync.RWMutex
-	CStatus    StatusType `json:"status"`
-	CMessage   string     `json:"message,omitempty"`
-	CUpdatedAt time.Time  `json:"updated_at,omitempty"`
-}
-
-func (cs *componentStatus) SetStatus(statusType StatusType, message string) {
+func (cs *ComponentStatus) SetStatus(statusType StatusType, message string) {
 	cs.mu.Lock()
-	defer cs.mu.Unlock()
 
-	cs.CMessage = message
-	cs.CStatus = statusType
-	cs.CUpdatedAt = time.Now()
+	cs.message = message
+	cs.status = statusType
+	cs.updatedAt = time.Now()
+
+	cs.mu.Unlock()
 }
-func (cs *componentStatus) Status() StatusType {
+func (cs *ComponentStatus) Status() StatusType {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
-	return cs.CStatus
+
+	return cs.status
 }
-func (cs *componentStatus) Message() string {
+func (cs *ComponentStatus) Message() string {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
-	return cs.CMessage
+
+	return cs.message
 }
-func (cs *componentStatus) LastUpdate() time.Time {
+func (cs *ComponentStatus) LastUpdate() time.Time {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
-	return cs.CUpdatedAt
+
+	return cs.updatedAt
 }
