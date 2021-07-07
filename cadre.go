@@ -3,7 +3,10 @@ package cadre
 import (
 	"context"
 	"net"
+	"net/http"
 	stdhttp "net/http"
+	"os"
+	"os/signal"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -20,8 +23,10 @@ type Cadre interface {
 }
 
 type cadre struct {
-	ctx       context.Context
-	ctxCancel func()
+	ctx              context.Context
+	ctxCancel        func()
+	finisherCallback Finisher
+	handledSigs      []os.Signal
 
 	logger  zerolog.Logger
 	status  *status.Status
@@ -38,6 +43,33 @@ type cadre struct {
 }
 
 func (c *cadre) Start() error {
+	sigs := make(chan os.Signal, 1)
+	sigsDone := make(chan bool)
+	signal.Notify(sigs, c.handledSigs...)
+
+	go func() {
+		n := 0
+		for sig := range sigs {
+			if c.finisherCallback == nil {
+				sigsDone <- true
+				break
+			}
+
+			if n >= 2 { // 3 SIGINTS kills me
+				sigsDone <- true
+				break
+			}
+			n += 1
+
+			if c.finisherCallback != nil && n == 1 {
+				go func(sig os.Signal) {
+					c.finisherCallback(sig)
+					sigsDone <- true
+				}(sig)
+			}
+		}
+	}()
+
 	// start http servers
 	for port, httpServer := range c.httpServers {
 		c.swg.Add(1)
@@ -48,6 +80,9 @@ func (c *cadre) Start() error {
 	c.swg.Add(1)
 	go c.startGRPC()
 
+	<-sigsDone
+	c.Shutdown()
+
 	<-c.ctx.Done()
 	c.swg.Wait()
 	return nil
@@ -56,6 +91,7 @@ func (c *cadre) Start() error {
 func (c *cadre) Shutdown() error {
 	c.ctxCancel()
 	c.swg.Wait()
+
 	return nil
 }
 
@@ -66,14 +102,18 @@ func (c *cadre) startHttpServer(addr string, httpServer *stdhttp.Server) {
 		Str("addr", addr).
 		Msg("starting http server")
 
+	go func() {
+		// wait for cadre's context to be done and shutdown the http server
+		<-c.ctx.Done()
+		httpServer.Shutdown(context.Background())
+	}()
+
 	err := httpServer.ListenAndServe()
-	if err != nil {
+	if err != nil && err != http.ErrServerClosed {
 		c.logger.Error().
 			Err(err).
 			Msg("http server failed")
 	}
-
-	<-c.ctx.Done()
 }
 
 func (c *cadre) startGRPC() {
@@ -90,12 +130,16 @@ func (c *cadre) startGRPC() {
 		Str("addr", c.grpcAddr).
 		Msg("starting grpc server")
 
+	go func() {
+		// wait for cadre's context to be done and shutdown the grpc server
+		<-c.ctx.Done()
+		c.grpcServer.GracefulStop()
+	}()
+
 	err := c.grpcServer.Serve(c.grpcListener)
 	if err != nil {
 		c.logger.Error().
 			Err(err).
 			Msg("grpc server failed")
 	}
-
-	<-c.ctx.Done()
 }

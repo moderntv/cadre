@@ -5,7 +5,9 @@ import (
 	"log"
 	"net"
 	stdhttp "net/http"
+	"os"
 	"strings"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -32,10 +34,15 @@ import (
 
 type ServiceRegistrator func(*grpc.Server)
 
+type Finisher func(sig os.Signal)
+
 type Builder struct {
 	name string // app name
 
 	ctx context.Context
+
+	finisherCallback Finisher
+	handledSigs      []os.Signal
 
 	// logging
 	logger zerolog.Logger
@@ -58,8 +65,9 @@ type Builder struct {
 // NewBuilder creates a new Builder instance and allows the user to configure the Cadre server by various options
 func NewBuilder(name string, options ...Option) (b *Builder, err error) {
 	b = &Builder{
-		name: name,
-		ctx:  context.Background(),
+		name:        name,
+		ctx:         context.Background(),
+		handledSigs: []os.Signal{syscall.SIGINT, syscall.SIGTERM},
 
 		logger: zerolog.Nop(),
 
@@ -92,8 +100,10 @@ func (b *Builder) Build() (c *cadre, err error) {
 
 	ctx, ctxCancel := context.WithCancel(b.ctx)
 	c = &cadre{
-		ctx:       ctx,
-		ctxCancel: ctxCancel,
+		ctx:              ctx,
+		ctxCancel:        ctxCancel,
+		finisherCallback: b.finisherCallback,
+		handledSigs:      b.handledSigs,
 
 		logger:  b.logger,
 		status:  b.status,
