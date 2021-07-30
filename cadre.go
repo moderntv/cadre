@@ -85,6 +85,7 @@ func (c *cadre) Start() error {
 	c.shutdown()
 
 	<-c.ctx.Done()
+  
 	return nil
 }
 
