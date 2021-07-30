@@ -84,7 +84,7 @@ func (c *cadre) Start() error {
 	c.Shutdown()
 
 	<-c.ctx.Done()
-	c.swg.Wait()
+
 	return nil
 }
 
