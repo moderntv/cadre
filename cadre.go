@@ -44,8 +44,8 @@ type cadre struct {
 }
 
 func (c *cadre) Start() error {
-	sigs := make(chan os.Signal, 1)
 	c.sigsDone = make(chan bool)
+	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, c.handledSigs...)
 
 	go func() {
@@ -100,6 +100,7 @@ func (c *cadre) shutdown() error {
 // cancelation and waits
 func (c *cadre) Shutdown() error {
 	c.sigsDone <- true
+	close(c.sigsDone)
 	return nil
 }
 
