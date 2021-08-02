@@ -27,7 +27,7 @@ type cadre struct {
 	ctxCancel        func()
 	finisherCallback Finisher
 	handledSigs      []os.Signal
-	sigsDone         chan bool
+	finalizerDone    chan bool
 
 	logger  zerolog.Logger
 	status  *status.Status
@@ -51,12 +51,12 @@ func (c *cadre) Start() error {
 		n := 0
 		for sig := range sigs {
 			if c.finisherCallback == nil {
-				c.sigsDone <- true
+				c.finalizerDone <- true
 				break
 			}
 
 			if n >= 2 { // 3 SIGINTS kills me
-				c.sigsDone <- true
+				c.finalizerDone <- true
 				break
 			}
 			n += 1
@@ -64,7 +64,7 @@ func (c *cadre) Start() error {
 			if c.finisherCallback != nil && n == 1 {
 				go func(sig os.Signal) {
 					c.finisherCallback(sig)
-					c.sigsDone <- true
+					c.finalizerDone <- true
 				}(sig)
 			}
 		}
@@ -80,7 +80,7 @@ func (c *cadre) Start() error {
 	c.swg.Add(1)
 	go c.startGRPC()
 
-	<-c.sigsDone
+	<-c.finalizerDone
 	c.shutdown()
 
 	<-c.ctx.Done()
@@ -99,8 +99,9 @@ func (c *cadre) shutdown() error {
 // This function shutdown the Start function that is waiting for sigsDone. The Start function initiates the context
 // cancelation and waits
 func (c *cadre) Shutdown() error {
-	c.sigsDone <- true
-	close(c.sigsDone)
+	c.finalizerDone <- true
+	close(c.finalizerDone)
+
 	return nil
 }
 

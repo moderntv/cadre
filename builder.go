@@ -104,7 +104,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 		ctxCancel:        ctxCancel,
 		finisherCallback: b.finisherCallback,
 		handledSigs:      b.handledSigs,
-		sigsDone:         make(chan bool),
+		finalizerDone:    make(chan bool),
 
 		logger:  b.logger,
 		status:  b.status,
