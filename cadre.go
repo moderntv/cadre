@@ -27,6 +27,7 @@ type cadre struct {
 	ctxCancel        func()
 	finisherCallback Finisher
 	handledSigs      []os.Signal
+	sigsDone         chan bool
 
 	logger  zerolog.Logger
 	status  *status.Status
@@ -44,19 +45,18 @@ type cadre struct {
 
 func (c *cadre) Start() error {
 	sigs := make(chan os.Signal, 1)
-	sigsDone := make(chan bool)
 	signal.Notify(sigs, c.handledSigs...)
 
 	go func() {
 		n := 0
 		for sig := range sigs {
 			if c.finisherCallback == nil {
-				sigsDone <- true
+				c.sigsDone <- true
 				break
 			}
 
 			if n >= 2 { // 3 SIGINTS kills me
-				sigsDone <- true
+				c.sigsDone <- true
 				break
 			}
 			n += 1
@@ -64,7 +64,7 @@ func (c *cadre) Start() error {
 			if c.finisherCallback != nil && n == 1 {
 				go func(sig os.Signal) {
 					c.finisherCallback(sig)
-					sigsDone <- true
+					c.sigsDone <- true
 				}(sig)
 			}
 		}
@@ -80,18 +80,27 @@ func (c *cadre) Start() error {
 	c.swg.Add(1)
 	go c.startGRPC()
 
-	<-sigsDone
-	c.Shutdown()
+	<-c.sigsDone
+	c.shutdown()
 
 	<-c.ctx.Done()
 
 	return nil
 }
 
-func (c *cadre) Shutdown() error {
+// shutdown the context and waits for WaitGroup of goroutines
+func (c *cadre) shutdown() error {
 	c.ctxCancel()
 	c.swg.Wait()
 
+	return nil
+}
+
+// This function shutdown the Start function that is waiting for sigsDone. The Start function initiates the context
+// cancelation and waits
+func (c *cadre) Shutdown() error {
+	c.sigsDone <- true
+	close(c.sigsDone)
 	return nil
 }
 
