@@ -27,7 +27,7 @@ type cadre struct {
 	ctxCancel        func()
 	finisherCallback Finisher
 	handledSigs      []os.Signal
-	sigsDone          chan bool
+	sigsDone         chan bool
 
 	logger  zerolog.Logger
 	status  *status.Status
@@ -44,7 +44,6 @@ type cadre struct {
 }
 
 func (c *cadre) Start() error {
-	c.sigsDone = make(chan bool)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, c.handledSigs...)
 
@@ -85,7 +84,7 @@ func (c *cadre) Start() error {
 	c.shutdown()
 
 	<-c.ctx.Done()
-  
+
 	return nil
 }
 
