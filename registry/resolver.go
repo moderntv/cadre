@@ -73,7 +73,8 @@ func (this *registryResolver) updateAddressesFromRegistry() {
 	for _, i := range is {
 		addrs = append(addrs, resolver.Address{Addr: i.Address()})
 	}
-	grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", this.service.Name(), is, addrs)
+	// TODO: fix grpc logger replacing in cadre
+	// grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", this.service.Name(), is, addrs)
 	this.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})
