@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"time"
 
 	"google.golang.org/grpc/grpclog"
@@ -19,46 +20,51 @@ func NewResolverBuilder(registry Registry) resolver.Builder {
 	}
 }
 
-func (this *resolverBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	r := newResolver(target, this.registry, cc)
+func (rb *resolverBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
+	r := newResolver(target, rb.registry, cc)
 	go r.start()
 
 	return r, nil
 }
 
-func (this *resolverBuilder) Scheme() string {
+func (rb *resolverBuilder) Scheme() string {
 	return "registry"
 }
 
 // registryResolver is a Resolver(https://godoc.org/google.golang.org/grpc/resolver#Resolver).
 type registryResolver struct {
+	ctx       context.Context
+	ctxCancel func()
+
 	// service  resolver.Target
 	service  Service
 	cc       resolver.ClientConn
 	registry Registry
-	quit     chan bool
 }
 
-func newResolver(target resolver.Target, registry Registry, cc resolver.ClientConn) *registryResolver {
-	service := &service{name: target.Endpoint}
-	return &registryResolver{
-		service:  service,
+func newResolver(target resolver.Target, registry Registry, cc resolver.ClientConn) (res *registryResolver) {
+	res = &registryResolver{
+		service:  &service{name: target.Endpoint},
 		registry: registry,
 		cc:       cc,
 	}
+
+	res.ctx, res.ctxCancel = context.WithCancel(context.Background())
+
+	return
 }
 
-func (this *registryResolver) start() {
-	this.updateAddressesFromRegistry()
+func (rr *registryResolver) start() {
+	rr.updateAddressesFromRegistry()
 
-	c, stop := this.registry.Watch(this.service.Name())
+	c, stop := rr.registry.Watch(rr.service.Name())
 	for {
 		select {
 		case <-c:
 			// TODO: implement some update instead of replacing the whole array?
 			grpclog.Infoln("[RESOLVER] got services update from registry")
-			this.updateAddressesFromRegistry()
-		case <-this.quit:
+			rr.updateAddressesFromRegistry()
+		case <-rr.ctx.Done():
 			stop()
 			return
 		default:
@@ -67,23 +73,23 @@ func (this *registryResolver) start() {
 	}
 }
 
-func (this *registryResolver) updateAddressesFromRegistry() {
-	is := this.registry.Instances(this.service.Name())
+func (rr *registryResolver) updateAddressesFromRegistry() {
+	is := rr.registry.Instances(rr.service.Name())
 	addrs := []resolver.Address{}
 	for _, i := range is {
 		addrs = append(addrs, resolver.Address{Addr: i.Address()})
 	}
-	// TODO: fix grpc logger replacing in cadre
-	// grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", this.service.Name(), is, addrs)
-	this.cc.UpdateState(resolver.State{
+
+	grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
+	rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})
 }
 
-func (this *registryResolver) ResolveNow(o resolver.ResolveNowOptions) {
-	this.updateAddressesFromRegistry()
+func (rr *registryResolver) ResolveNow(o resolver.ResolveNowOptions) {
+	rr.updateAddressesFromRegistry()
 }
 
-func (this *registryResolver) Close() {
-	this.quit <- true
+func (rr *registryResolver) Close() {
+	rr.ctxCancel()
 }

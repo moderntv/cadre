@@ -3,7 +3,7 @@ package etcd
 import (
 	"time"
 
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 
 	"github.com/moderntv/cadre/registry"
 )

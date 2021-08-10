@@ -310,7 +310,7 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	)
 
 	// replace gRPC logger
-	grpc_zerolog.ReplaceGrpcLoggerV2(b.logger.Level(zerolog.ErrorLevel))
+	// grpc_zerolog.ReplaceGrpcLoggerV2(b.logger.Level(zerolog.ErrorLevel))
 
 	// register services
 	// health service
