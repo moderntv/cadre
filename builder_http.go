@@ -141,7 +141,7 @@ func WithHTTPListeningAddress(addr string) HTTPOption {
 }
 
 // WithGlobalMiddleware adds new global middleware to the HTTP server
-// default - metrics, recovery and logging
+// default - metrics, logging and recovery (in this order)
 func WithGlobalMiddleware(middlware ...gin.HandlerFunc) HTTPOption {
 	return func(h *httpOptions) error {
 		h.globalMiddleware = append(h.globalMiddleware, middlware...)

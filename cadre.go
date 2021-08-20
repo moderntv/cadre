@@ -3,7 +3,6 @@ package cadre
 import (
 	"context"
 	"net"
-	"net/http"
 	stdhttp "net/http"
 	"os"
 	"os/signal"
@@ -73,7 +72,7 @@ func (c *cadre) Start() error {
 	// start http servers
 	for port, httpServer := range c.httpServers {
 		c.swg.Add(1)
-		go c.startHttpServer(port, httpServer)
+		go c.startHTTPServer(port, httpServer)
 	}
 
 	// start grpc server
@@ -105,7 +104,7 @@ func (c *cadre) Shutdown() error {
 	return nil
 }
 
-func (c *cadre) startHttpServer(addr string, httpServer *stdhttp.Server) {
+func (c *cadre) startHTTPServer(addr string, httpServer *stdhttp.Server) {
 	defer c.swg.Done()
 
 	c.logger.Debug().
@@ -119,7 +118,7 @@ func (c *cadre) startHttpServer(addr string, httpServer *stdhttp.Server) {
 	}()
 
 	err := httpServer.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && err != stdhttp.ErrServerClosed {
 		c.logger.Error().
 			Err(err).
 			Msg("http server failed")
