@@ -15,13 +15,13 @@ var (
 )
 
 type TypedError struct {
-	type_ Type
+	typ   Type
 	cause error
 }
 
 func NewTyped(typ Type, cause error) TypedError {
 	return TypedError{
-		type_: typ,
+		typ:   typ,
 		cause: cause,
 	}
 }
@@ -31,5 +31,5 @@ func (e TypedError) Error() string {
 }
 
 func (e TypedError) Unwrap() error {
-	return error(e.type_)
+	return error(e.typ)
 }
