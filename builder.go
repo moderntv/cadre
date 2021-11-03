@@ -49,13 +49,13 @@ type Builder struct {
 
 	// status
 	status               *status.Status
-	statusHttpServerAddr string
+	statusHTTPServerAddr string
 	statusPath           string
 
 	// metrics
 	metrics               *metrics.Registry
 	prometheusRegistry    *prometheus.Registry
-	metricsHttpServerAddr string
+	metricsHTTPServerAddr string
 	metricsPath           string
 
 	grpcOptions *grpcOptions
@@ -119,19 +119,19 @@ func (b *Builder) Build() (c *cadre, err error) {
 	}
 
 	// extra http services init
-	if b.metricsHttpServerAddr != "" {
+	if b.metricsHTTPServerAddr != "" {
 		WithHTTP("metrics_http",
-			WithHTTPListeningAddress(b.metricsHttpServerAddr),
+			WithHTTPListeningAddress(b.metricsHTTPServerAddr),
 			WithRoute("GET", b.metricsPath, gin.WrapH(promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}))),
 		)(b)
 	}
 
-	if b.statusHttpServerAddr != "" {
+	if b.statusHTTPServerAddr != "" {
 		WithHTTP("status_http",
-			WithHTTPListeningAddress(b.statusHttpServerAddr),
+			WithHTTPListeningAddress(b.statusHTTPServerAddr),
 			WithRoute("GET", b.statusPath, func(c *gin.Context) {
 				report := b.status.Report()
-				if report.Status == status.OK {
+				if report.Status != status.ERROR {
 					responses.Ok(c, report)
 					return
 				}
@@ -170,7 +170,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 	// create and configure http server
 	var httpServers map[string]*http.HttpServer
 	if b.httpOptions != nil {
-		httpServers, err = b.buildHttp(c, ctx)
+		httpServers, err = b.buildHTTP(c, ctx)
 		if err != nil {
 			return
 		}
@@ -244,11 +244,11 @@ func (b *Builder) ensure() (err error) {
 
 	// configure metrics + status endpoint http servers
 	if len(b.httpOptions) >= 1 {
-		if b.statusHttpServerAddr == "" {
-			b.statusHttpServerAddr = b.httpOptions[0].listeningAddress
+		if b.statusHTTPServerAddr == "" {
+			b.statusHTTPServerAddr = b.httpOptions[0].listeningAddress
 		}
-		if b.metricsHttpServerAddr == "" {
-			b.metricsHttpServerAddr = b.httpOptions[0].listeningAddress
+		if b.metricsHTTPServerAddr == "" {
+			b.metricsHTTPServerAddr = b.httpOptions[0].listeningAddress
 		}
 
 		if b.grpcOptions != nil && b.grpcOptions.multiplexWithHTTP {
@@ -341,14 +341,14 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	return
 }
 
-func (b *Builder) buildHttp(c *cadre, cadreContext context.Context) (httpServers map[string]*http.HttpServer, err error) {
+func (b *Builder) buildHTTP(c *cadre, cadreContext context.Context) (httpServers map[string]*http.HttpServer, err error) {
 	httpServers = map[string]*http.HttpServer{}
 
-	mergedHttpOptions := map[string]*httpOptions{}
+	mergedHTTPOptions := map[string]*httpOptions{}
 	for _, newServer := range b.httpOptions {
 		addr := newServer.listeningAddress
-		if existingServer, ok := mergedHttpOptions[addr]; ok {
-			mergedHttpOptions[addr], err = existingServer.merge(newServer)
+		if existingServer, ok := mergedHTTPOptions[addr]; ok {
+			mergedHTTPOptions[addr], err = existingServer.merge(newServer)
 			if err != nil {
 				return
 			}
@@ -356,10 +356,10 @@ func (b *Builder) buildHttp(c *cadre, cadreContext context.Context) (httpServers
 			continue
 		}
 
-		mergedHttpOptions[newServer.listeningAddress] = newServer
+		mergedHTTPOptions[newServer.listeningAddress] = newServer
 	}
 
-	for _, httpOptions := range mergedHttpOptions {
+	for _, httpOptions := range mergedHTTPOptions {
 		httpServers[httpOptions.listeningAddress], err = httpOptions.build(cadreContext, b.logger, b.metrics)
 
 		if err != nil {

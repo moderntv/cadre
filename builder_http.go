@@ -108,24 +108,24 @@ func defaultHTTPOptions() *httpOptions {
 type HTTPOption func(*httpOptions) error
 
 // WithHTTP enables HTTP server
-func WithHTTP(serverName string, myHttpOptions ...HTTPOption) Option {
+func WithHTTP(serverName string, myHTTPOptions ...HTTPOption) Option {
 	return func(options *Builder) error {
 		if options.httpOptions == nil {
 			options.httpOptions = []*httpOptions{}
 		}
 
-		thisHttpServerOptions := defaultHTTPOptions()
-		thisHttpServerOptions.serverName = serverName
-		thisHttpServerOptions.services = append(thisHttpServerOptions.services, serverName)
+		thisHTTPServerOptions := defaultHTTPOptions()
+		thisHTTPServerOptions.serverName = serverName
+		thisHTTPServerOptions.services = append(thisHTTPServerOptions.services, serverName)
 
-		for _, option := range myHttpOptions {
-			err := option(thisHttpServerOptions)
+		for _, option := range myHTTPOptions {
+			err := option(thisHTTPServerOptions)
 			if err != nil {
 				return err
 			}
 		}
 
-		options.httpOptions = append(options.httpOptions, thisHttpServerOptions)
+		options.httpOptions = append(options.httpOptions, thisHTTPServerOptions)
 
 		return nil
 	}

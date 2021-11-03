@@ -59,7 +59,7 @@ func WithStatus(status *status.Status) Option {
 // when a conflicting route is configured
 func WithStatusListeningAddress(serverListeningAddress string) Option {
 	return func(options *Builder) error {
-		options.statusHttpServerAddr = serverListeningAddress
+		options.statusHTTPServerAddr = serverListeningAddress
 
 		return nil
 	}
@@ -92,7 +92,7 @@ func WithPrometheusRegistry(registry *prometheus.Registry) Option {
 // when a conflicting route is configured
 func WithMetricsListeningAddress(serverListeningAddress string) Option {
 	return func(options *Builder) error {
-		options.metricsHttpServerAddr = serverListeningAddress
+		options.metricsHTTPServerAddr = serverListeningAddress
 
 		return nil
 	}
