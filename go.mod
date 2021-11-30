@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/cespare/xxhash/v2 v2.1.1
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/gin-gonic/gin v1.6.2
+	github.com/gin-gonic/gin v1.7.7
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/moderntv/hashring v1.0.1
