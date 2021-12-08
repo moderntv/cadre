@@ -12,9 +12,9 @@ import (
 
 type fileRegistry struct {
 	v         *viper.Viper
-	sLock     sync.RWMutex               //protects services *AND* instances
-	services  servicesMap                //service:[]instance
-	instances map[string]map[string]bool // service:instance:true
+	sLock     sync.RWMutex                   //protects services *AND* instances
+	services  servicesMap                    //service:[]instance
+	instances map[string]map[string]struct{} // service:instance:true
 	wLock     sync.RWMutex
 	watchers  map[string][]chan registry.RegistryChange
 }
@@ -56,7 +56,7 @@ func NewRegistry(filePath string, opts ...option) (registry.Registry, error) {
 	r := fileRegistry{
 		v:         v,
 		services:  servicesMap{},
-		instances: map[string]map[string]bool{},
+		instances: map[string]map[string]struct{}{},
 		watchers:  map[string][]chan registry.RegistryChange{},
 	}
 
@@ -92,10 +92,10 @@ func (this *fileRegistry) loadInstancesFromViper() error {
 
 	this.sLock.RLock()
 	newServices := servicesMap{}
-	newInstances := map[string]map[string]bool{}
+	newInstances := map[string]map[string]struct{}{}
 	for service, addrs := range rawRegistryData {
 		newServices[service] = []registry.Instance{}
-		newInstances[service] = map[string]bool{}
+		newInstances[service] = map[string]struct{}{}
 
 		for _, addr := range addrs {
 			i := &instance{
@@ -103,7 +103,7 @@ func (this *fileRegistry) loadInstancesFromViper() error {
 				addr:        addr,
 			}
 			newServices[service] = append(newServices[service], i)
-			newInstances[service][addr] = true
+			newInstances[service][addr] = struct{}{}
 
 			// detect newly registered instances
 			if _, ok := this.instances[service]; ok {

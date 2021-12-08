@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
 )
 
@@ -28,7 +27,7 @@ func (rb *resolverBuilder) Build(target resolver.Target, cc resolver.ClientConn,
 }
 
 func (rb *resolverBuilder) Scheme() string {
-	return "registry"
+	return Scheme
 }
 
 // registryResolver is a Resolver(https://godoc.org/google.golang.org/grpc/resolver#Resolver).
@@ -62,7 +61,7 @@ func (rr *registryResolver) start() {
 		select {
 		case <-c:
 			// TODO: implement some update instead of replacing the whole array?
-			grpclog.Infoln("[RESOLVER] got services update from registry")
+			// grpclog.Infoln("[RESOLVER] got services update from registry")
 			rr.updateAddressesFromRegistry()
 		case <-rr.ctx.Done():
 			stop()
@@ -80,7 +79,7 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 		addrs = append(addrs, resolver.Address{Addr: i.Address()})
 	}
 
-	grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
+	// grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
 	rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})

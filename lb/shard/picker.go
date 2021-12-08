@@ -7,7 +7,6 @@ import (
 
 	"github.com/moderntv/hashring"
 	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/grpclog"
 )
 
 type shardPicker struct {
@@ -39,7 +38,7 @@ func (this *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, erro
 	if !ok {
 		return balancer.PickResult{}, errors.New("dafuq?")
 	}
-	grpclog.Infoln("shard balancer picker: picking new conn: picked addr: ", addr, "for key", shardKey)
+	// grpclog.Infoln("shard balancer picker: picking new conn: picked addr: ", addr, "for key", shardKey)
 
 	return balancer.PickResult{
 		SubConn: sc,

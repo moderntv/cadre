@@ -69,28 +69,28 @@ func Test_resolverBuilder_Build(t *testing.T) {
 type clientConn struct{}
 
 // UpdateState updates the state of the ClientConn appropriately.
-func (this *clientConn) UpdateState(s resolver.State) {}
+func (cc *clientConn) UpdateState(s resolver.State) error { return nil }
 
 // ReportError notifies the ClientConn that the Resolver encountered an
 // error.  The ClientConn will notify the load balancer and begin calling
 // ResolveNow on the Resolver with exponential backoff.
-func (this *clientConn) ReportError(e error) {}
+func (cc *clientConn) ReportError(e error) {}
 
 // NewAddress is called by resolver to notify ClientConn a new list
 // of resolved addresses.
 // The address list should be the complete list of resolved addresses.
 //
 // Deprecated: Use UpdateState instead.
-func (this *clientConn) NewAddress(addresses []resolver.Address) {}
+func (cc *clientConn) NewAddress(addresses []resolver.Address) {}
 
 // NewServiceConfig is called by resolver to notify ClientConn a new
 // service config. The service config should be provided as a json string.
 //
 // Deprecated: Use UpdateState instead.
-func (this *clientConn) NewServiceConfig(serviceConfig string) {}
+func (cc *clientConn) NewServiceConfig(serviceConfig string) {}
 
 // ParseServiceConfig parses the provided service config and returns an
 // object that provides the parsed config.
-func (this *clientConn) ParseServiceConfig(serviceConfigJSON string) *serviceconfig.ParseResult {
+func (cc *clientConn) ParseServiceConfig(serviceConfigJSON string) *serviceconfig.ParseResult {
 	return nil
 }
