@@ -24,6 +24,10 @@ type Status struct {
 	components map[string]*ComponentStatus
 }
 
+var (
+	ErrAlreadyExists = errors.New("component already exists")
+)
+
 func NewStatus(version string) (status *Status) {
 	status = &Status{
 		version:    version,
@@ -38,7 +42,7 @@ func (s *Status) Register(name string) (cs *ComponentStatus, err error) {
 	defer s.mu.Unlock()
 
 	if _, ok := s.components[name]; ok {
-		err = errors.New("component already registered")
+		err = ErrAlreadyExists
 		return
 	}
 
@@ -47,6 +51,22 @@ func (s *Status) Register(name string) (cs *ComponentStatus, err error) {
 		message: "uninitialized",
 	}
 	s.components[name] = cs
+
+	return
+}
+
+func (s *Status) RegisterOrGet(name string) (cs *ComponentStatus, err error) {
+	cs, err = s.Register(name)
+	if err == nil {
+		return
+	}
+	if err != nil && err != ErrAlreadyExists {
+		return
+	}
+	// err = ErrAlreadyExists
+	err = nil
+
+	cs = s.components[name]
 
 	return
 }

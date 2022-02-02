@@ -15,6 +15,7 @@ var (
 	ErrMetricNil           = errors.New("metric cannot be nil")
 	ErrMetricAlreadyExists = errors.New("metric already exists")
 	ErrMetricNotFound      = errors.New("metric not found")
+	ErrInvalidType         = errors.New("metric of invalid type found")
 )
 
 type Registry struct {
@@ -71,6 +72,24 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 	registry.metrics[name] = c
 
 	return
+}
+
+func (registry *Registry) RegisterOrGet(name string, c prometheus.Collector) (cRegistered prometheus.Collector, err error) {
+	cRegistered, err = registry.Get(name)
+	if err == nil {
+		return
+	}
+	if err != nil && err != ErrMetricNotFound {
+		return
+	}
+	// err = ErrMetricNotFound
+
+	err = registry.Register(name, c)
+	if err != nil {
+		return
+	}
+
+	return c, nil
 }
 
 func (registry *Registry) Unregister(name string) (err error) {
