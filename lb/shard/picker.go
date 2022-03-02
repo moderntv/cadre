@@ -3,6 +3,7 @@ package shard
 import (
 	"context"
 	"errors"
+	"log"
 	"sync"
 
 	"github.com/moderntv/hashring"
@@ -35,6 +36,7 @@ func (this *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, erro
 	}
 
 	sc, ok := this.addr2sc[addr]
+	log.Println("AAAAAAAAAAAAAAAAAAAA", addr, this.addr2sc, this.ring)
 	if !ok {
 		return balancer.PickResult{}, errors.New("dafuq?")
 	}
