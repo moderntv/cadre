@@ -31,7 +31,7 @@ func newPickerBuilder(options builderOptions) (base.PickerBuilder, error) {
 
 func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 	// grpclog.Infoln("shard balancer: building new picker: ", info)
-	log.Println("shard balancer: building new picker: ", info)
+	log.Printf("shard balancer: building new picker: %+v", info)
 	if len(info.ReadySCs) <= 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
