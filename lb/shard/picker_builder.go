@@ -42,11 +42,13 @@ func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 		newLastConns[sci.Address.Addr] = true
 		addr2sc[sci.Address.Addr] = sc
 		if _, ok := pb.lastConns[sci.Address.Addr]; !ok {
+			log.Printf("shard balancer: building new picker: adding new node: %+v", sci.Address.Addr)
 			pb.ring.AddNode(sci.Address.Addr)
 		}
 	}
 	for addr := range pb.lastConns {
 		if _, ok := newLastConns[addr]; !ok {
+			log.Printf("shard balancer: building new picker: removing node: %+v", addr)
 			pb.ring.DeleteNode(addr)
 		}
 
