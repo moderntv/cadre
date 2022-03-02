@@ -13,6 +13,7 @@ require (
 	github.com/rantav/go-grpc-channelz v0.0.2
 	github.com/rkollar/go-grpc-middleware v1.2.3-0.20201020153056-bb8b0531b026
 	github.com/rs/zerolog v1.20.0
+	github.com/serialx/hashring v0.0.0-20200727003509-22c0c7ab6b1b // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0
 	go.etcd.io/etcd/client/v3 v3.5.0

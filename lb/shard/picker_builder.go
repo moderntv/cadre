@@ -1,26 +1,19 @@
 package shard
 
 import (
-	"fmt"
-
-	"github.com/cespare/xxhash/v2"
-	"github.com/moderntv/hashring"
+	"github.com/serialx/hashring"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
-	"google.golang.org/grpc/grpclog"
 )
 
 type pickerBuilder struct {
-	ring      *hashring.Ring
+	ring      *hashring.HashRing
 	options   builderOptions
 	lastConns map[string]bool
 }
 
 func newPickerBuilder(options builderOptions) (base.PickerBuilder, error) {
-	ring, err := hashring.New(hashring.WithHashFunc(xxhash.New()))
-	if err != nil {
-		return nil, fmt.Errorf("cannot create ring for picker builder: %v", err)
-	}
+	ring := hashring.New([]string{})
 
 	return &pickerBuilder{
 		ring:      ring,
@@ -30,7 +23,7 @@ func newPickerBuilder(options builderOptions) (base.PickerBuilder, error) {
 }
 
 func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
-	grpclog.Infoln("shard balancer: building new picker: ", info)
+	// grpclog.Infoln("shard balancer: building new picker: ", info)
 	if len(info.ReadySCs) <= 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
@@ -46,7 +39,7 @@ func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 	}
 	for addr := range pb.lastConns {
 		if _, ok := newLastConns[addr]; !ok {
-			pb.ring.DeleteNode(addr)
+			pb.ring.RemoveNode(addr)
 		}
 
 	}

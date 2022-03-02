@@ -5,19 +5,19 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/moderntv/hashring"
+	"github.com/serialx/hashring"
 	"google.golang.org/grpc/balancer"
 )
 
 type shardPicker struct {
 	sync.RWMutex
 
-	ring       *hashring.Ring
+	ring       *hashring.HashRing
 	addr2sc    map[string]balancer.SubConn
 	shardKeyFn func(context.Context) string
 }
 
-func newShardPicker(ring *hashring.Ring, addr2sc map[string]balancer.SubConn, shardKeyFunc func(context.Context) string) balancer.Picker {
+func newShardPicker(ring *hashring.HashRing, addr2sc map[string]balancer.SubConn, shardKeyFunc func(context.Context) string) balancer.Picker {
 	return &shardPicker{
 		ring:       ring,
 		addr2sc:    addr2sc,
@@ -29,9 +29,9 @@ func (this *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, erro
 	shardKey := this.shardKeyFn(info.Ctx)
 	// grpclog.Infoln("shard balancer picker: picking new conn: ", shardKey)
 
-	addr, err := this.ring.GetNode(shardKey)
-	if err != nil {
-		return balancer.PickResult{}, err
+	addr, ok := this.ring.GetNode(shardKey)
+	if !ok {
+		return balancer.PickResult{}, errors.New("no node available")
 	}
 
 	sc, ok := this.addr2sc[addr]
