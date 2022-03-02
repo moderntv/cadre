@@ -2,12 +2,12 @@ package shard
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/moderntv/hashring"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
-	"google.golang.org/grpc/grpclog"
 )
 
 type pickerBuilder struct {
@@ -30,7 +30,8 @@ func newPickerBuilder(options builderOptions) (base.PickerBuilder, error) {
 }
 
 func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
-	grpclog.Infoln("shard balancer: building new picker: ", info)
+	// grpclog.Infoln("shard balancer: building new picker: ", info)
+	log.Println("shard balancer: building new picker: ", info)
 	if len(info.ReadySCs) <= 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
