@@ -36,7 +36,7 @@ func (this *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, erro
 	}
 
 	sc, ok := this.addr2sc[addr]
-	log.Println("AAAAAAAAAAAAAAAAAAAA", addr, this.addr2sc, this.ring)
+	log.Println("AAAAAAAAAAAAAAAAAAAA", addr, this.addr2sc, sc, ok)
 	if !ok {
 		return balancer.PickResult{}, errors.New("dafuq?")
 	}
