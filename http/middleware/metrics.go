@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -40,10 +41,17 @@ func NewMetrics(r *metrics.Registry, subsystem string) (handler func(*gin.Contex
 
 		c.Next()
 
-		d := time.Now().Sub(t)
-		path := c.Request.URL.Path
-		requestsCount.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Inc()
-		requestsDuration.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Observe(float64(d / time.Microsecond))
+		d := time.Since(t)
+
+		go func(c *gin.Context, d time.Duration) {
+			path := c.Request.URL.Path
+			for _, param := range c.Params {
+				path = strings.ReplaceAll(path, param.Value, fmt.Sprintf(":%s", param.Key))
+			}
+
+			requestsCount.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Inc()
+			requestsDuration.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Observe(float64(d / time.Microsecond))
+		}(c.Copy(), d)
 	}
 
 	return
