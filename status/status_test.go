@@ -1,9 +1,22 @@
 package status
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
+
+var (
+	hostname string
+	err      error
+)
+
+func init() {
+	hostname, err = os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestNewStatus(t *testing.T) {
 	type args struct {
@@ -21,6 +34,7 @@ func TestNewStatus(t *testing.T) {
 			},
 			want: &Status{
 				version:    "v6.6.6",
+				hostname:   hostname,
 				components: map[string]*ComponentStatus{},
 			},
 		},
@@ -136,17 +150,31 @@ func TestStatus_Report(t *testing.T) {
 		{
 			name:     "warning-error",
 			status:   NewStatus("v6.6.6"),
-			services: []string{"foo", "bar", "meh"},
+			services: []string{"k", "foo", "bar", "meh"},
 			servicesChanges: []map[string]serviceStatus{
 				{
-					"foo": {OK, "OK"},
+					"k":   {OK, "OK"},
 					"meh": {WARN, "Meh failure"},
+					"foo": {ERROR, "Major failure"},
+					"bar": {WARN, "Meh failure"},
+				},
+				{
+					"k":   {OK, "OK"},
+					"meh": {WARN, "Meh failure"},
+					"foo": {WARN, "Meh failure"},
+					"bar": {ERROR, "Major failure"},
+				},
+				{
+					"k":   {OK, "OK"},
+					"meh": {WARN, "Meh failure"},
+					"foo": {ERROR, "Major failure"},
 					"bar": {ERROR, "Major failure"},
 				},
 			},
 			servicesFinal: map[string]StatusType{
-				"foo": OK,
+				"k":   OK,
 				"meh": WARN,
+				"foo": ERROR,
 				"bar": ERROR,
 			},
 			overallStatusFinal: ERROR,

@@ -2,6 +2,7 @@ package status
 
 import (
 	"errors"
+	"os"
 	"sync"
 	"time"
 )
@@ -13,12 +14,14 @@ type ComponentReport struct {
 }
 type Report struct {
 	Version    string                     `json:"version"`
+	Hostname   string                     `json:"hostname"`
 	Status     StatusType                 `json:"status"`
 	Components map[string]ComponentReport `json:"components"`
 }
 
 type Status struct {
-	version string
+	version  string
+	hostname string
 
 	mu         sync.RWMutex
 	components map[string]*ComponentStatus
@@ -29,8 +32,15 @@ var (
 )
 
 func NewStatus(version string) (status *Status) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "<unknown>"
+	}
+
 	status = &Status{
-		version:    version,
+		version:  version,
+		hostname: hostname,
+
 		components: make(map[string]*ComponentStatus),
 	}
 
@@ -76,6 +86,7 @@ func (s *Status) Report() (report Report) {
 	defer s.mu.RUnlock()
 
 	report.Version = s.version
+	report.Hostname = s.hostname
 	report.Status = OK
 	report.Components = make(map[string]ComponentReport)
 	for n, cs := range s.components {
@@ -90,7 +101,7 @@ func (s *Status) Report() (report Report) {
 			report.Status = ERROR
 			break
 		}
-		if s.Status == WARN {
+		if s.Status == WARN && report.Status != ERROR {
 			report.Status = WARN
 		}
 	}
