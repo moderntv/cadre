@@ -192,6 +192,10 @@ func TestRegistry_Unregister(t *testing.T) {
 }
 
 func TestRegistry_Get(t *testing.T) {
+	collectors := map[string]prometheus.Collector{
+		"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+	}
+
 	type fields struct {
 		prometheusRegistry *prometheus.Registry
 		metrics            map[string]prometheus.Collector
@@ -211,13 +215,13 @@ func TestRegistry_Get(t *testing.T) {
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics: map[string]prometheus.Collector{
-					"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+					"simple_counter": collectors["simple_counter"],
 				},
 			},
 			args: args{
 				"simple_counter",
 			},
-			wantC:   prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+			wantC:   collectors["simple_counter"],
 			wantErr: false,
 		},
 		{
@@ -246,7 +250,7 @@ func TestRegistry_Get(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(gotC, tt.wantC) {
-				t.Errorf("Registry.Get() = %v, want %v", gotC, tt.wantC)
+				t.Errorf("Registry.Get() = %+v, want %+v", gotC, tt.wantC)
 			}
 		})
 	}
