@@ -1,6 +1,7 @@
 package cadre
 
 import (
+	"errors"
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -25,6 +26,10 @@ func WithContext(ctx context.Context) Option {
 // WithFinisher adds a callback to be called for various signals (SIGINT, SIGTERM by default) which can be optionally set
 func WithFinisher(cb Finisher, handledSigs ...os.Signal) Option {
 	return func(options *Builder) error {
+		if options.finisherCallback != nil {
+			return errors.New("finisher already registered")
+		}
+
 		options.finisherCallback = cb
 		if len(handledSigs) > 0 {
 			options.handledSigs = handledSigs
