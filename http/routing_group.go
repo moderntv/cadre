@@ -1,6 +1,8 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +21,7 @@ type RoutingGroup struct {
 type StaticRoute struct {
 	Path string
 	Root string
+	FS   http.FileSystem
 }
 
 func (rg RoutingGroup) Register(registrator grouper) (err error) {
@@ -31,7 +34,20 @@ func (rg RoutingGroup) Register(registrator grouper) (err error) {
 	}
 
 	for _, staticRoute := range rg.Static {
-		g.Static(staticRoute.Path, staticRoute.Root)
+		if staticRoute.Root == "" && staticRoute.FS == nil {
+			panic("either `Root` or `FS` must be specified for static route")
+		}
+		if staticRoute.Root != "" && staticRoute.FS != nil {
+			panic("cannot register static route with both `Root` and `FS` specified")
+		}
+
+		if staticRoute.Root != "" {
+			g.Static(staticRoute.Path, staticRoute.Root)
+		}
+
+		if staticRoute.FS != nil {
+			g.StaticFS(staticRoute.Path, staticRoute.FS)
+		}
 	}
 
 	for _, subGroup := range rg.Groups {
