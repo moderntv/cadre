@@ -97,7 +97,7 @@ func TestOk(t *testing.T) {
 	tests := []struct {
 		name         string
 		httpTestShit httpTestShit
-		data         interface{}
+		data         any
 		wantStatus   int
 		wantBody     string
 	}{
@@ -118,7 +118,7 @@ func TestOk(t *testing.T) {
 		{
 			name:         "map",
 			httpTestShit: newHttpTestshit(),
-			data:         map[string]interface{}{"a": "b", "c": 4, "e": 6.01, "g": false},
+			data:         map[string]any{"a": "b", "c": 4, "e": 6.01, "g": false},
 			wantStatus:   http.StatusOK,
 			wantBody:     `{"data":{"a":"b","c":4,"e":6.01,"g":false}}`,
 		},
@@ -144,16 +144,16 @@ func TestOkWithMeta(t *testing.T) {
 	tests := []struct {
 		name         string
 		httpTestShit httpTestShit
-		data         interface{}
-		metadata     interface{}
+		data         any
+		metadata     any
 		wantStatus   int
 		wantBody     string
 	}{
 		{
 			name:         "simple",
 			httpTestShit: newHttpTestshit(),
-			data:         map[string]interface{}{"a": "b", "c": 4, "e": 6.01, "g": false},
-			metadata:     map[string]interface{}{"lorem": "ipsum"},
+			data:         map[string]any{"a": "b", "c": 4, "e": 6.01, "g": false},
+			metadata:     map[string]any{"lorem": "ipsum"},
 			wantStatus:   http.StatusOK,
 			wantBody:     `{"data":{"a":"b","c":4,"e":6.01,"g":false},"metadata":{"lorem":"ipsum"}}`,
 		},
@@ -179,14 +179,14 @@ func TestCreated(t *testing.T) {
 	tests := []struct {
 		name         string
 		httpTestShit httpTestShit
-		data         interface{}
+		data         any
 		wantStatus   int
 		wantBody     string
 	}{
 		{
 			name:         "simple",
 			httpTestShit: newHttpTestshit(),
-			data:         map[string]interface{}{"a": "b", "c": 4, "e": 6.01, "g": false},
+			data:         map[string]any{"a": "b", "c": 4, "e": 6.01, "g": false},
 			wantStatus:   http.StatusCreated,
 			wantBody:     `{"data":{"a":"b","c":4,"e":6.01,"g":false}}`,
 		},

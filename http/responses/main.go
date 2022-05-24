@@ -9,13 +9,13 @@ import (
 )
 
 type SuccessResponse struct {
-	Data interface{} `json:"data"`
+	Data any `json:"data"`
 }
 
 type Error struct {
-	Type    string      `json:"type,omitempty"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Type    string `json:"type,omitempty"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -63,14 +63,14 @@ func FromError(c *gin.Context, err error) {
 	InternalError(c, NewError(err))
 }
 
-func Ok(c *gin.Context, data interface{}) {
+func Ok(c *gin.Context, data any) {
 	c.AbortWithStatusJSON(200, gin.H{
 		"data": data,
 	})
 }
 
 // OkWithMeta sets the HTTP response status to 200
-func OkWithMeta(c *gin.Context, data interface{}, metadata interface{}) {
+func OkWithMeta(c *gin.Context, data any, metadata any) {
 	c.AbortWithStatusJSON(200, gin.H{
 		"data":     data,
 		"metadata": metadata,
@@ -78,7 +78,7 @@ func OkWithMeta(c *gin.Context, data interface{}, metadata interface{}) {
 }
 
 // Created sets the HTTP response status to 201
-func Created(c *gin.Context, data interface{}) {
+func Created(c *gin.Context, data any) {
 	c.AbortWithStatusJSON(201, SuccessResponse{data})
 }
 
