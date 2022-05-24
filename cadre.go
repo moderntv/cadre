@@ -2,6 +2,7 @@ package cadre
 
 import (
 	"context"
+	"fmt"
 	"net"
 	stdhttp "net/http"
 	"os"
@@ -42,7 +43,7 @@ type cadre struct {
 	httpServers map[string]*stdhttp.Server
 }
 
-func (c *cadre) Start() error {
+func (c *cadre) Start() (err error) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, c.handledSigs...)
 
@@ -80,11 +81,15 @@ func (c *cadre) Start() error {
 	go c.startGRPC()
 
 	<-c.finalizerDone
-	c.shutdown()
+	err = c.shutdown()
+	if err != nil {
+		err = fmt.Errorf("shutdown failed: %w", err)
+		return
+	}
 
 	<-c.ctx.Done()
 
-	return nil
+	return
 }
 
 // shutdown the context and waits for WaitGroup of goroutines
@@ -114,7 +119,7 @@ func (c *cadre) startHTTPServer(addr string, httpServer *stdhttp.Server) {
 	go func() {
 		// wait for cadre's context to be done and shutdown the http server
 		<-c.ctx.Done()
-		httpServer.Shutdown(context.Background())
+		_ = httpServer.Shutdown(context.Background())
 	}()
 
 	err := httpServer.ListenAndServe()

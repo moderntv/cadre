@@ -42,8 +42,13 @@ type registryResolver struct {
 }
 
 func newResolver(target resolver.Target, registry Registry, cc resolver.ClientConn) (res *registryResolver) {
+	endpoint := target.URL.Path
+	if endpoint == "" {
+		endpoint = target.URL.Opaque
+	}
+
 	res = &registryResolver{
-		service:  &service{name: target.Endpoint},
+		service:  &service{name: endpoint},
 		registry: registry,
 		cc:       cc,
 	}
@@ -80,9 +85,13 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 	}
 
 	// grpclog.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
-	rr.cc.UpdateState(resolver.State{
+	err := rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})
+	if err != nil {
+		// grpclog.Errorf("[RESOLVER] service connection update failed")
+		return
+	}
 }
 
 func (rr *registryResolver) ResolveNow(o resolver.ResolveNowOptions) {

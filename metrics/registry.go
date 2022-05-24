@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -37,12 +38,12 @@ func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (reg
 		metrics:            map[string]prometheus.Collector{},
 	}
 
-	err = registry.Register("go", prometheus.NewGoCollector())
+	err = registry.Register("go", collectors.NewGoCollector())
 	if err != nil {
 		err = fmt.Errorf("cannot register go collector: %w", err)
 		return
 	}
-	err = registry.Register("process", prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	err = registry.Register("process", collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	if err != nil {
 		err = fmt.Errorf("cannot register process collector: %w", err)
 		return

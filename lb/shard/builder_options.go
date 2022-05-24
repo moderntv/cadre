@@ -20,3 +20,11 @@ func defaultBuilderOptions() builderOptions {
 		},
 	}
 }
+
+func WithShardKeyFunc(shardKeyFunc func(context.Context) string) builderOption {
+	return func(opts *builderOptions) error {
+		opts.shardKeyFunc = shardKeyFunc
+
+		return nil
+	}
+}

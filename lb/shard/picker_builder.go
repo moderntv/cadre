@@ -41,12 +41,20 @@ func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 		newLastConns[sci.Address.Addr] = true
 		addr2sc[sci.Address.Addr] = sc
 		if _, ok := pb.lastConns[sci.Address.Addr]; !ok {
-			pb.ring.AddNode(sci.Address.Addr)
+			err := pb.ring.AddNode(sci.Address.Addr)
+			if err != nil {
+				err = fmt.Errorf("cannot add node to ring: %w", err)
+				return base.NewErrPicker(err)
+			}
 		}
 	}
 	for addr := range pb.lastConns {
 		if _, ok := newLastConns[addr]; !ok {
-			pb.ring.DeleteNode(addr)
+			err := pb.ring.DeleteNode(addr)
+			if err != nil {
+				err = fmt.Errorf("cannot remove node from ring: %w", err)
+				return base.NewErrPicker(err)
+			}
 		}
 
 	}

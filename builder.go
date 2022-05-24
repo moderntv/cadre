@@ -120,14 +120,18 @@ func (b *Builder) Build() (c *cadre, err error) {
 
 	// extra http services init
 	if b.metricsHTTPServerAddr != "" {
-		WithHTTP("metrics_http",
+		err = WithHTTP("metrics_http",
 			WithHTTPListeningAddress(b.metricsHTTPServerAddr),
 			WithRoute("GET", b.metricsPath, gin.WrapH(promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}))),
 		)(b)
+		if err != nil {
+			err = fmt.Errorf("adding metrics http server failed: %w", err)
+			return
+		}
 	}
 
 	if b.statusHTTPServerAddr != "" {
-		WithHTTP("status_http",
+		err = WithHTTP("status_http",
 			WithHTTPListeningAddress(b.statusHTTPServerAddr),
 			WithRoute("GET", b.statusPath, func(c *gin.Context) {
 				report := b.status.Report()
@@ -141,17 +145,25 @@ func (b *Builder) Build() (c *cadre, err error) {
 				})
 			}),
 		)(b)
+		if err != nil {
+			err = fmt.Errorf("adding status http server failed: %w", err)
+			return
+		}
 	}
 
 	if b.grpcOptions != nil && b.grpcOptions.enableChannelz {
 		channelzHandler := channelz.CreateHandler("/", b.grpcOptions.listeningAddress)
 
-		WithHTTP("channelz_http",
+		err = WithHTTP("channelz_http",
 			WithHTTPListeningAddress(b.grpcOptions.channelzHttpAddr),
 			WithRoute("GET", "/channelz/*path", func(c *gin.Context) {
 				channelzHandler.ServeHTTP(c.Writer, c.Request)
 			}),
 		)(b)
+		if err != nil {
+			err = fmt.Errorf("adding channelz http server failed: %w", err)
+			return
+		}
 	}
 
 	// create and configure grpc server
@@ -341,7 +353,7 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	return
 }
 
-func (b *Builder) buildHTTP(c *cadre, cadreContext context.Context) (httpServers map[string]*http.HttpServer, err error) {
+func (b *Builder) buildHTTP(_ *cadre, cadreContext context.Context) (httpServers map[string]*http.HttpServer, err error) {
 	httpServers = map[string]*http.HttpServer{}
 
 	mergedHTTPOptions := map[string]*httpOptions{}
