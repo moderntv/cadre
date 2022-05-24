@@ -17,6 +17,7 @@ func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
 		c.Next()
 
 		latency := time.Since(start)
+		// path := c.FullPath()
 		path := c.Request.URL.Path
 
 		dumplogger := logger.With().
