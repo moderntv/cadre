@@ -283,6 +283,7 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	// interceptors - always in order: tags, logging, tracing, metrics, custom, recovery => recovery should be always the last one
 	unaryInterceptors := []grpc.UnaryServerInterceptor{}
 	streamInterceptors := []grpc.StreamServerInterceptor{}
+
 	// logging
 	if b.grpcOptions.enableLoggingMiddleware {
 		unaryInterceptors = append(
@@ -298,7 +299,7 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	}
 
 	// TODO: add tracing middleware
-	//metrics middleware
+	// metrics middleware
 	unaryInterceptors = append(unaryInterceptors, grpcMetrics.UnaryServerInterceptor())
 	streamInterceptors = append(streamInterceptors, grpcMetrics.StreamServerInterceptor())
 
@@ -306,7 +307,7 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	unaryInterceptors = append(unaryInterceptors, b.grpcOptions.extraUnaryInterceptors...)
 	streamInterceptors = append(streamInterceptors, b.grpcOptions.extraStreamInterceptors...)
 
-	//recovery middleware
+	// recovery middleware
 	if b.grpcOptions.enableRecoveryMiddleware {
 		unaryInterceptors = append(unaryInterceptors, grpc_recovery.UnaryServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...))
 		streamInterceptors = append(streamInterceptors, grpc_recovery.StreamServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...))
