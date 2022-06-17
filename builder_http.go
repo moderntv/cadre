@@ -169,14 +169,16 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 	return func(h *httpOptions) (err error) {
 		g, ok := h.routingGroups[group.Base]
 		if !ok {
+			automaticMethods(group)
 			h.routingGroups[group.Base] = group
 			return nil
 		}
-
-		h.routingGroups[group.Base], err = mergeRoutingGroups(g, group)
+		group, err = mergeRoutingGroups(g, group)
 		if err != nil {
 			return err
 		}
+		automaticMethods(group)
+		h.routingGroups[group.Base] = group
 
 		return nil
 	}
@@ -197,6 +199,18 @@ func WithoutMetricsMiddleware() HTTPOption {
 }
 
 // ---------------------------------------------------------------
+func automaticMethods(group http.RoutingGroup) {
+	for path, methodHandlers := range group.Routes {
+		getHandlers, ok := group.Routes[path]["GET"]
+		if ok {
+			_, ok = methodHandlers["HEAD"]
+			if !ok {
+				methodHandlers["HEAD"] = getHandlers
+			}
+		}
+	}
+}
+
 func mergeRoutingGroups(old, _new http.RoutingGroup) (merged http.RoutingGroup, err error) {
 	var ok bool
 	// TODO: deduplicate middleware
