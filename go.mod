@@ -16,7 +16,7 @@ require (
 	github.com/spf13/viper v1.11.0
 	go.etcd.io/etcd/client/v3 v3.5.0
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5
-	google.golang.org/grpc v1.45.0
+	google.golang.org/grpc v1.47.0
 )
 
 require (
