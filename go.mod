@@ -8,7 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/golangci/golangci-lint v1.46.2
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/moderntv/hashring v1.0.1
+	github.com/moderntv/hashring v1.0.2
 	github.com/prometheus/client_golang v1.12.1
 	github.com/rantav/go-grpc-channelz v0.0.2
 	github.com/rkollar/go-grpc-middleware v1.2.3-0.20201020153056-bb8b0531b026
