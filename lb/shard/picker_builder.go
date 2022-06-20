@@ -20,7 +20,10 @@ func newPickerBuilder(options builderOptions) (base.PickerBuilder, error) {
 }
 
 func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
-	// logger.Infoln("shard balancer: building new picker: ", info)
+	if logger.V(2) {
+		logger.Infof("shard balancer: building new picker: %v", info)
+	}
+
 	if len(info.ReadySCs) <= 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}

@@ -27,7 +27,10 @@ func newShardPicker(ring *hashring.Ring, addr2sc map[string]balancer.SubConn, sh
 
 func (picker *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 	shardKey := picker.shardKeyFn(info.Ctx)
-	// logger.Infoln("shard balancer picker: picking new conn: ", shardKey)
+
+	if logger.V(3) {
+		logger.Infof("shard balancer picker: picking new conn: %v", shardKey)
+	}
 
 	addr, err := picker.ring.GetNode(shardKey)
 	if err != nil {
@@ -38,7 +41,10 @@ func (picker *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, er
 	if !ok {
 		return balancer.PickResult{}, errors.New("dafuq?")
 	}
-	// logger.Infoln("shard balancer picker: picking new conn: picked addr: ", addr, "for key", shardKey)
+
+	if logger.V(2) {
+		logger.Infof("shard balancer picker: picking new conn: picked addr: %v for key %v", addr, shardKey)
+	}
 
 	return balancer.PickResult{
 		SubConn: sc,
