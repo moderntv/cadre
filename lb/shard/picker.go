@@ -25,20 +25,20 @@ func newShardPicker(ring *hashring.Ring, addr2sc map[string]balancer.SubConn, sh
 	}
 }
 
-func (this *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
-	shardKey := this.shardKeyFn(info.Ctx)
-	// grpclog.Infoln("shard balancer picker: picking new conn: ", shardKey)
+func (picker *shardPicker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
+	shardKey := picker.shardKeyFn(info.Ctx)
+	// logger.Infoln("shard balancer picker: picking new conn: ", shardKey)
 
-	addr, err := this.ring.GetNode(shardKey)
+	addr, err := picker.ring.GetNode(shardKey)
 	if err != nil {
 		return balancer.PickResult{}, err
 	}
 
-	sc, ok := this.addr2sc[addr]
+	sc, ok := picker.addr2sc[addr]
 	if !ok {
 		return balancer.PickResult{}, errors.New("dafuq?")
 	}
-	// grpclog.Infoln("shard balancer picker: picking new conn: picked addr: ", addr, "for key", shardKey)
+	// logger.Infoln("shard balancer picker: picking new conn: picked addr: ", addr, "for key", shardKey)
 
 	return balancer.PickResult{
 		SubConn: sc,

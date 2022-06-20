@@ -1,12 +1,18 @@
 package shard
 
-import "google.golang.org/grpc/balancer"
-
-const Name = "shard"
+import (
+	"google.golang.org/grpc/balancer"
+	"google.golang.org/grpc/grpclog"
+)
 
 type ShardLBCtxKeyType string
 
-const DefaultShardKeyName ShardLBCtxKeyType = "shard_key"
+const (
+	Name                                  = "shard"
+	DefaultShardKeyName ShardLBCtxKeyType = "shard_key"
+)
+
+var logger = grpclog.Component("shard_lb")
 
 func init() {
 	b, err := NewBuilder()
