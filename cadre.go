@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -143,6 +144,27 @@ func (c *cadre) startGRPC() {
 	c.logger.Debug().
 		Str("addr", c.grpcAddr).
 		Msg("starting grpc server")
+
+	go func() {
+		t := time.NewTicker(5 * time.Second)
+
+		for {
+			select {
+			case <-t.C:
+				{
+					report := c.status.Report()
+					switch report.Status {
+					case status.OK:
+						c.grpcHealthService.Resume()
+					case status.WARN, status.ERROR:
+						c.grpcHealthService.Shutdown()
+					}
+				}
+			case <-c.ctx.Done():
+				return
+			}
+		}
+	}()
 
 	go func() {
 		// wait for cadre's context to be done and shutdown the grpc server
