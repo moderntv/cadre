@@ -81,14 +81,16 @@ func (c *cadre) Start() (err error) {
 	c.swg.Add(1)
 	go c.startGRPC()
 
-	<-c.finalizerDone
+	select {
+	case <-c.ctx.Done():
+	case <-c.finalizerDone:
+	}
+
 	err = c.shutdown()
 	if err != nil {
 		err = fmt.Errorf("shutdown failed: %w", err)
 		return
 	}
-
-	<-c.ctx.Done()
 
 	return
 }
