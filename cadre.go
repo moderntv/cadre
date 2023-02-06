@@ -151,16 +151,21 @@ func (c *cadre) startGRPC() {
 		t := time.NewTicker(5 * time.Second)
 
 		for {
+			// Nothing to check
+			if c.grpcHealthService == nil {
+				break
+			}
+
 			select {
 			case <-t.C:
-				{
-					report := c.status.Report()
-					switch report.Status {
-					case status.OK:
-						c.grpcHealthService.Resume()
-					case status.WARN, status.ERROR:
-						c.grpcHealthService.Shutdown()
-					}
+				report := c.status.Report()
+				switch report.Status {
+				case status.OK:
+					c.grpcHealthService.Resume()
+
+				case status.WARN, status.ERROR:
+					c.grpcHealthService.Shutdown()
+
 				}
 			case <-c.ctx.Done():
 				return
