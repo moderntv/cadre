@@ -133,6 +133,26 @@ func (c *cadre) startHTTPServer(addr string, httpServer *stdhttp.Server) {
 	}
 }
 
+func (c *cadre) healthServerCheck() {
+	t := time.NewTicker(5 * time.Second)
+	for {
+		select {
+		case <-t.C:
+			report := c.status.Report()
+			switch report.Status {
+			case status.OK:
+				c.grpcHealthService.Resume()
+
+			case status.WARN, status.ERROR:
+				c.grpcHealthService.Shutdown()
+
+			}
+		case <-c.ctx.Done():
+			return
+		}
+	}
+}
+
 func (c *cadre) startGRPC() {
 	defer c.swg.Done()
 
@@ -147,31 +167,9 @@ func (c *cadre) startGRPC() {
 		Str("addr", c.grpcAddr).
 		Msg("starting grpc server")
 
-	go func() {
-		t := time.NewTicker(5 * time.Second)
-
-		for {
-			// Nothing to check
-			if c.grpcHealthService == nil {
-				break
-			}
-
-			select {
-			case <-t.C:
-				report := c.status.Report()
-				switch report.Status {
-				case status.OK:
-					c.grpcHealthService.Resume()
-
-				case status.WARN, status.ERROR:
-					c.grpcHealthService.Shutdown()
-
-				}
-			case <-c.ctx.Done():
-				return
-			}
-		}
-	}()
+	if c.grpcHealthService != nil {
+		go c.healthServerCheck()
+	}
 
 	go func() {
 		// wait for cadre's context to be done and shutdown the grpc server
