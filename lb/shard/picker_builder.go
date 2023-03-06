@@ -13,10 +13,10 @@ type pickerBuilder struct {
 	options builderOptions
 }
 
-func newPickerBuilder(options builderOptions) (base.PickerBuilder, error) {
+func newPickerBuilder(options builderOptions) base.PickerBuilder {
 	return &pickerBuilder{
 		options: options,
-	}, nil
+	}
 }
 
 func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {

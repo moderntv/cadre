@@ -1,8 +1,6 @@
 package shard
 
 import (
-	"fmt"
-
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
 )
@@ -13,10 +11,6 @@ func NewBuilder() (balancer.Builder, error) {
 
 func NewNamedBuilder(name string) (balancer.Builder, error) {
 	options := defaultBuilderOptions()
-	pickerBuilder, err := newPickerBuilder(options)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create picker builder: %v", err)
-	}
-
+	pickerBuilder := newPickerBuilder(options)
 	return base.NewBalancerBuilder(name, pickerBuilder, base.Config{HealthCheck: true}), nil
 }
