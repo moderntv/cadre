@@ -1,15 +1,17 @@
 package source
 
+import "context"
+
 type Source interface {
 	Name() string
 	Read() ([]byte, error)
 	Load(dst any) error
+	Save(dst any) error
 	Watch() (Watcher, error)
 }
 
 type Watcher interface {
-	C() chan ConfigChange
-	Stop()
+	C(ctx context.Context) chan ConfigChange
 }
 
 type ConfigChange struct {

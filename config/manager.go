@@ -1,12 +1,14 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/moderntv/cadre/config/source"
 )
 
 type Manager struct {
+	config  any
 	sources []source.Source
 
 	watcher        *watcher
@@ -15,7 +17,7 @@ type Manager struct {
 	watchUnsubCh   chan chan source.ConfigChange
 }
 
-func NewManager(opts ...Option) (m *Manager, err error) {
+func NewManager(configStruct any, opts ...Option) (m *Manager, err error) {
 	options := defaultOptions()
 	for _, opt := range opts {
 		err = opt(options)
@@ -25,6 +27,7 @@ func NewManager(opts ...Option) (m *Manager, err error) {
 	}
 
 	m = &Manager{
+		config:  configStruct,
 		sources: options.sources,
 
 		watchPublishCh: make(chan source.ConfigChange, 1),
@@ -47,6 +50,21 @@ func (m *Manager) Load(dst any) (err error) {
 	}
 
 	return
+}
+
+func (m *Manager) Save(source source.Source, dst any) error {
+	var saved bool
+	for _, src := range m.sources {
+		if source.Name() == src.Name() {
+			return src.Save(dst)
+		}
+	}
+
+	if !saved {
+		return errors.New("no source found. Save not performed")
+	}
+
+	return nil
 }
 
 // Subscribe returns a channel which will receive message on change

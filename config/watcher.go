@@ -36,17 +36,13 @@ func newWatcher(srcs ...source.Source) (w *watcher, err error) {
 func (w *watcher) C() chan source.ConfigChange {
 	cs := make([]chan source.ConfigChange, len(w.watchers))
 	for i, watcher := range w.watchers {
-		cs[i] = watcher.C()
+		cs[i] = watcher.C(w.ctx)
 	}
 
 	return merge(cs...)
 }
 
 func (w *watcher) Stop() {
-	for _, watcher := range w.watchers {
-		watcher.Stop()
-	}
-
 	w.ctxCancel()
 }
 
