@@ -1,6 +1,7 @@
 package registry_test
 
 import (
+	"net/url"
 	"testing"
 
 	"google.golang.org/grpc/resolver"
@@ -28,6 +29,12 @@ func Test_resolverBuilder_Build(t *testing.T) {
 		return
 	}
 
+	url, err := url.Parse("registry:///foosvc")
+	if err != nil {
+		t.Errorf("failed to parse url: %v", err)
+		return
+	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -41,9 +48,7 @@ func Test_resolverBuilder_Build(t *testing.T) {
 			},
 			args: args{
 				target: resolver.Target{
-					Scheme:    "registry",
-					Authority: "",
-					Endpoint:  "foosvc",
+					URL: *url,
 				},
 				cc: &clientConn{},
 			},
