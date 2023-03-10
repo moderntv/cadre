@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,7 +25,7 @@ type Registry struct {
 
 	prometheusRegistry *prometheus.Registry
 
-	metrics map[string]prometheus.Collector
+	metrics sync.Map
 }
 
 func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (registry *Registry, err error) {
@@ -35,7 +36,6 @@ func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (reg
 	registry = &Registry{
 		namespace:          namespace,
 		prometheusRegistry: prometheusRegistry,
-		metrics:            map[string]prometheus.Collector{},
 	}
 
 	err = registry.Register("go", collectors.NewGoCollector())
@@ -61,7 +61,7 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 		err = ErrMetricNil
 		return
 	}
-	if _, ok := registry.metrics[name]; ok {
+	if _, ok := registry.metrics.Load(name); ok {
 		err = ErrMetricAlreadyExists
 		return
 	}
@@ -70,7 +70,7 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 	if err != nil {
 		return
 	}
-	registry.metrics[name] = c
+	registry.metrics.Store(name, c)
 
 	return
 }
@@ -94,25 +94,25 @@ func (registry *Registry) RegisterOrGet(name string, c prometheus.Collector) (cR
 }
 
 func (registry *Registry) Unregister(name string) (err error) {
-	c, ok := registry.metrics[name]
+	v, ok := registry.metrics.Load(name)
 	if !ok {
 		err = ErrMetricNotFound
 		return
 	}
+	c := v.(prometheus.Collector)
 
 	registry.prometheusRegistry.Unregister(c) // ignore return value - it only tells us the collector doesn't exist in prometheus registry
-	delete(registry.metrics, name)
+	registry.metrics.Delete(name)
 
 	return
 }
 
 func (registry *Registry) Get(name string) (c prometheus.Collector, err error) {
-	var ok bool
-
-	c, ok = registry.metrics[name]
+	v, ok := registry.metrics.Load(name)
 	if !ok {
 		err = ErrMetricNotFound
 	}
+	c = v.(prometheus.Collector)
 
 	return
 }
