@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -210,8 +211,9 @@ func (b *Builder) Build() (c *cadre, err error) {
 		}
 
 		c.httpServers[addr] = &stdhttp.Server{
-			Addr:    addr,
-			Handler: h,
+			Addr:              addr,
+			Handler:           h,
+			ReadHeaderTimeout: 5 * time.Second,
 		}
 	}
 
