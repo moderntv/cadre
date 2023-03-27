@@ -16,4 +16,5 @@ type Watcher interface {
 
 type ConfigChange struct {
 	SourceName string
+	Type       string
 }

@@ -40,28 +40,36 @@ func (w *watcher) C(ctx context.Context) chan source.ConfigChange {
 	c := make(chan source.ConfigChange)
 
 	go func() {
-		select {
-		case <-ctx.Done():
-			close(c)
-			return
+		for {
+			select {
+			case <-ctx.Done():
+				return
 
-		case event := <-w.fsnw.Events:
-			switch event.Op {
-			case fsnotify.Remove, fsnotify.Create: //, fsnotify.Chmod:
-				break
-			case fsnotify.Rename:
-				_, err := os.Stat(event.Name)
-				if err == nil || errors.Is(err, fs.ErrExist) {
-					_ = w.fsnw.Add(event.Name)
+			case event := <-w.fsnw.Events:
+				cc := source.ConfigChange{
+					SourceName: Name,
 				}
-				break
-			case fsnotify.Chmod, fsnotify.Write:
-			}
 
-			c <- source.ConfigChange{
-				SourceName: Name,
+				switch event.Op {
+				case fsnotify.Remove, fsnotify.Create: //, fsnotify.Chmod:
+					cc.Type = "remove/create"
+					break
+				case fsnotify.Rename:
+					_, err := os.Stat(event.Name)
+					if err == nil || errors.Is(err, fs.ErrExist) {
+						_ = w.fsnw.Add(event.Name)
+					}
+
+					cc.Type = "rename"
+					break
+				case fsnotify.Chmod, fsnotify.Write:
+					cc.Type = "write"
+					w.fsnw.Remove(w.path)
+				}
+
+				c <- cc
+				w.fsnw.Add(w.path)
 			}
-			_ = w.fsnw.Add(w.path)
 		}
 	}()
 
