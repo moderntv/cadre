@@ -11,11 +11,13 @@ var _ source.Watcher = &watcher{}
 
 type watcher struct {
 	prefix string
+	check  func(c chan source.ConfigChange)
 }
 
-func newWatcher(prefix string) (w *watcher) {
+func newWatcher(prefix string, check func(c chan source.ConfigChange)) (w *watcher) {
 	w = &watcher{
 		prefix: prefix,
+		check:  check,
 	}
 	return
 }
@@ -29,14 +31,11 @@ func (w *watcher) C(ctx context.Context) chan source.ConfigChange {
 			case <-ctx.Done():
 				close(c)
 				return
+
 			case <-time.After(5 * time.Second):
-				c <- source.ConfigChange{
-					SourceName: Name,
-				}
+				w.check(c)
 			}
 		}
-
-		close(c)
 	}()
 
 	return c

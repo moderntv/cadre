@@ -1,12 +1,10 @@
 package environment
 
 import (
-	"fmt"
 	"os"
 	"reflect"
 	"strings"
 
-	"github.com/moderntv/cadre/config/encoder"
 	"github.com/moderntv/cadre/config/source"
 	"github.com/spf13/viper"
 )
@@ -17,16 +15,14 @@ var (
 )
 
 type EnvironmentSource struct {
-	prefix  string
-	encoder encoder.Encoder
-	viper   *viper.Viper
+	prefix string
+	viper  *viper.Viper
 }
 
-func NewSource(prefix string, encoder encoder.Encoder, v *viper.Viper) (es *EnvironmentSource, err error) {
+func NewSource(prefix string, v *viper.Viper) (es *EnvironmentSource, err error) {
 	es = &EnvironmentSource{
-		prefix:  prefix,
-		encoder: encoder,
-		viper:   v,
+		prefix: prefix,
+		viper:  v,
 	}
 	es.viper.SetEnvPrefix(strings.ToUpper(prefix))
 	es.viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -37,11 +33,16 @@ func (es *EnvironmentSource) Name() string {
 	return Name
 }
 
-func (es *EnvironmentSource) bindEnvs(configStructPtr interface{}, parts ...string) {
+func (es *EnvironmentSource) bindEnvs(configStructPtr interface{}, parts ...string) error {
 	configStructValue := reflect.ValueOf(configStructPtr).Elem()
 	configStructType := configStructValue.Type()
 
+	var err error
 	for _, field := range reflect.VisibleFields(configStructType) {
+		if err != nil {
+			continue
+		}
+
 		if !field.IsExported() || field.Anonymous {
 			continue
 		}
@@ -68,9 +69,11 @@ func (es *EnvironmentSource) bindEnvs(configStructPtr interface{}, parts ...stri
 		case reflect.Struct:
 			es.bindEnvs(fieldValue.Addr().Interface(), append(parts, tag)...)
 		default:
-			_ = es.viper.BindEnv(strings.Join(append(parts, tag), "."))
+			err = es.viper.BindEnv(strings.Join(append(parts, tag), "."))
 		}
 	}
+
+	return err
 }
 
 func (es *EnvironmentSource) Read() (d []byte, err error) {
@@ -86,16 +89,34 @@ func (es *EnvironmentSource) Read() (d []byte, err error) {
 	return
 }
 
+func (es *EnvironmentSource) Save(dst any) (err error) {
+	return
+}
+
 func (es *EnvironmentSource) Load(dst any) (err error) {
-	d, err := es.Read()
+	err = es.bindEnvs(dst)
 	if err != nil {
-		return fmt.Errorf("data read failed: %w", err)
+		return
 	}
 
-	return es.encoder.Decode(d, dst)
+	es.viper.Unmarshal(dst)
+	return nil
 }
 
 func (es *EnvironmentSource) Watch() (w source.Watcher, err error) {
-	w = newWatcher(es.prefix)
+	check := func(c chan source.ConfigChange) {
+		d, err := es.Read()
+		if err != nil {
+			return
+		}
+
+		if len(d) != 0 {
+			c <- source.ConfigChange{
+				SourceName: es.Name(),
+			}
+		}
+	}
+
+	w = newWatcher(es.prefix, check)
 	return
 }

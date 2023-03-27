@@ -2,9 +2,11 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/moderntv/cadre/config/source"
+	"github.com/sveatlo/bundlerr"
 )
 
 type watcher struct {
@@ -13,23 +15,26 @@ type watcher struct {
 	watchers  []source.Watcher
 }
 
-func newWatcher(srcs ...source.Source) (w *watcher, err error) {
-	watchers := make([]source.Watcher, len(srcs))
-	for i, src := range srcs {
-		watchers[i], err = src.Watch()
+func newWatcher(ctx context.Context, srcs ...source.Source) (w *watcher, err error) {
+	watchers := make([]source.Watcher, 0, len(srcs))
+	b := bundlerr.New()
+	for _, src := range srcs {
+		watcher, err := src.Watch()
 		if err != nil {
-			return
+			b.Append(fmt.Errorf("source %s watcher ended with err: %w", src.Name(), err))
+			continue
 		}
+
+		watchers = append(watchers, watcher)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
+	watcherContext, cancel := context.WithCancel(ctx)
 	w = &watcher{
-		ctx:       ctx,
+		ctx:       watcherContext,
 		ctxCancel: cancel,
 		watchers:  watchers,
 	}
-
+	err = b.Evaluate()
 	return
 }
 

@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"os"
@@ -31,25 +32,29 @@ func newWatcher(path string) (w *watcher, err error) {
 		path: path,
 		fsnw: fsnw,
 	}
-
 	return
 }
 
-func (w *watcher) C() chan source.ConfigChange {
+func (w *watcher) C(ctx context.Context) chan source.ConfigChange {
 	// TODO: create new fsnotify watcher for every channel
 	c := make(chan source.ConfigChange)
 
 	go func() {
-		for event := range w.fsnw.Events {
+		select {
+		case <-ctx.Done():
+			close(c)
+			return
+
+		case event := <-w.fsnw.Events:
 			switch event.Op {
 			case fsnotify.Remove, fsnotify.Create: //, fsnotify.Chmod:
-				continue
+				break
 			case fsnotify.Rename:
 				_, err := os.Stat(event.Name)
 				if err == nil || errors.Is(err, fs.ErrExist) {
 					_ = w.fsnw.Add(event.Name)
 				}
-				continue
+				break
 			case fsnotify.Chmod, fsnotify.Write:
 			}
 
@@ -58,8 +63,6 @@ func (w *watcher) C() chan source.ConfigChange {
 			}
 			_ = w.fsnw.Add(w.path)
 		}
-
-		close(c)
 	}()
 
 	return c

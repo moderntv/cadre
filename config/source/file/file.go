@@ -29,7 +29,7 @@ func NewSource(path string, encoder encoder.Encoder) (fs *FileSource, err error)
 }
 
 func (fs *FileSource) Name() string {
-	return "file"
+	return Name
 }
 
 func (fs *FileSource) Read() (d []byte, err error) {
@@ -45,6 +45,26 @@ func (fs *FileSource) Read() (d []byte, err error) {
 	}
 
 	return
+}
+
+func (fs *FileSource) Save(dst any) (err error) {
+	data, err := fs.encoder.Encode(dst)
+	if err != nil {
+		return
+	}
+
+	f, err := os.Create(fs.path)
+	if err != nil {
+		return
+	}
+
+	defer f.Close()
+	_, err = f.Write(data)
+	if err != nil {
+		return
+	}
+
+	return nil
 }
 
 func (fs *FileSource) Load(dst any) (err error) {

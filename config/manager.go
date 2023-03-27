@@ -1,14 +1,15 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/moderntv/cadre/config/source"
 )
 
 type Manager struct {
-	config  any
 	sources []source.Source
 
 	watcher        *watcher
@@ -17,7 +18,7 @@ type Manager struct {
 	watchUnsubCh   chan chan source.ConfigChange
 }
 
-func NewManager(configStruct any, opts ...Option) (m *Manager, err error) {
+func NewManager(opts ...Option) (m *Manager, err error) {
 	options := defaultOptions()
 	for _, opt := range opts {
 		err = opt(options)
@@ -27,7 +28,6 @@ func NewManager(configStruct any, opts ...Option) (m *Manager, err error) {
 	}
 
 	m = &Manager{
-		config:  configStruct,
 		sources: options.sources,
 
 		watchPublishCh: make(chan source.ConfigChange, 1),
@@ -40,8 +40,12 @@ func NewManager(configStruct any, opts ...Option) (m *Manager, err error) {
 	return
 }
 
-func (m *Manager) Load(dst any) (err error) {
+func (m *Manager) LoadFromSource(dst any, sourceName string) (err error) {
 	for _, src := range m.sources {
+		if src.Name() != sourceName {
+			continue
+		}
+
 		err = src.Load(dst)
 		if err != nil {
 			err = fmt.Errorf("source `%s` failed to load: %w", src.Name(), err)
@@ -52,28 +56,61 @@ func (m *Manager) Load(dst any) (err error) {
 	return
 }
 
-func (m *Manager) Save(source source.Source, dst any) error {
-	var saved bool
+func (m *Manager) Load(dst Config) (err error) {
+	merged := dst
 	for _, src := range m.sources {
-		if source.Name() == src.Name() {
-			return src.Save(dst)
+		err = src.Load(merged)
+		if err != nil {
+			err = fmt.Errorf("source `%s` failed to load: %w", src.Name(), err)
+			return
+		}
+
+		err = dst.Merge(merged)
+		if err != nil {
+			err = fmt.Errorf("source `%s` failed to merge: %w", src.Name(), err)
+			return
+		}
+	}
+
+	return
+}
+
+func (m *Manager) Save(dst Config) (err error) {
+	var saved bool
+	merged := dst
+	for _, src := range m.sources {
+		if src.Name() == "file" {
+			err = src.Save(merged)
+			if err != nil {
+				err = fmt.Errorf("source `%s` could not save: %w", src.Name(), err)
+				return
+			}
+
+			saved = true
+		}
+
+		err = dst.Merge(merged)
+		if err != nil {
+			err = fmt.Errorf("source `%s` failed to merge: %w", src.Name(), err)
+			return
 		}
 	}
 
 	if !saved {
-		return errors.New("no source found. Save not performed")
+		err = errors.New("no source found. Save not performed")
+		return
 	}
 
-	return nil
+	return
 }
 
 // Subscribe returns a channel which will receive message on change
-func (m *Manager) Subscribe() (chan source.ConfigChange, error) {
+func (m *Manager) Subscribe(ctx context.Context) (chan source.ConfigChange, error) {
 	if m.watcher == nil {
 		var err error
-		m.watcher, err = newWatcher(m.sources...)
+		m.watcher, err = newWatcher(ctx, m.sources...)
 		if err != nil {
-			return nil, err
+			log.Println(err)
 		}
 	}
 
