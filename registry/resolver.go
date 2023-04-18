@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/simplesurance/grpcconsulresolver/consul"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
 )
@@ -20,6 +21,10 @@ func NewResolverBuilder(registry Registry) resolver.Builder {
 	return &resolverBuilder{
 		registry: registry,
 	}
+}
+
+func NewConsulResolverBuilder(registry Registry) resolver.Builder {
+	return consul.NewBuilder()
 }
 
 func (rb *resolverBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
