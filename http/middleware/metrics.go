@@ -10,7 +10,7 @@ import (
 	"github.com/moderntv/cadre/metrics"
 )
 
-func NewMetrics(r *metrics.Registry, subsystem string, endpointKey *string) (handler func(*gin.Context), err error) {
+func NewMetrics(r *metrics.Registry, subsystem string) (handler func(*gin.Context), err error) {
 	requestsDuration, err := r.RegisterNewSummaryVec(fmt.Sprintf("http_%v_request_duration_us", subsystem), prometheus.SummaryOpts{
 		Subsystem: subsystem,
 
@@ -41,12 +41,7 @@ func NewMetrics(r *metrics.Registry, subsystem string, endpointKey *string) (han
 		c.Next()
 
 		d := time.Since(t)
-		path := c.FullPath()
-		if endpointKey != nil {
-			parameter := c.Param(*endpointKey)
-			path = parameter
-		}
-
+		path := c.Request.URL.String()
 		requestsCount.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Inc()
 		requestsDuration.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Observe(float64(d / time.Microsecond))
 	}

@@ -22,9 +22,8 @@ type httpOptions struct {
 	enableLoggingMiddleware bool
 	enableMetricsMiddleware bool
 
-	globalMiddleware   []gin.HandlerFunc
-	routingGroups      map[string]http.RoutingGroup
-	metricsEndpointKey *string
+	globalMiddleware []gin.HandlerFunc
+	routingGroups    map[string]http.RoutingGroup
 }
 
 func (h *httpOptions) ensure() (err error) {
@@ -45,9 +44,8 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 		enableLoggingMiddleware: h.enableLoggingMiddleware,
 		enableMetricsMiddleware: h.enableMetricsMiddleware,
 
-		globalMiddleware:   append(h.globalMiddleware, other.globalMiddleware...),
-		routingGroups:      h.routingGroups,
-		metricsEndpointKey: h.metricsEndpointKey,
+		globalMiddleware: append(h.globalMiddleware, other.globalMiddleware...),
+		routingGroups:    h.routingGroups,
 	}
 
 	for _, othersRoutingGroup := range other.routingGroups {
@@ -65,7 +63,7 @@ func (h *httpOptions) build(cadreContext context.Context, logger zerolog.Logger,
 	{
 		if h.enableMetricsMiddleware {
 			var metricsMiddleware gin.HandlerFunc
-			metricsMiddleware, err = middleware.NewMetrics(metricsRegistry, h.serverName, h.metricsEndpointKey)
+			metricsMiddleware, err = middleware.NewMetrics(metricsRegistry, h.serverName)
 			if err != nil {
 				return
 			}
@@ -196,13 +194,6 @@ func WithoutLoggingMiddleware() HTTPOption {
 func WithoutMetricsMiddleware() HTTPOption {
 	return func(h *httpOptions) error {
 		h.enableMetricsMiddleware = false
-		return nil
-	}
-}
-
-func WithMetricsEndpointKey(metricsEndpointKey string) HTTPOption {
-	return func(h *httpOptions) error {
-		h.metricsEndpointKey = &metricsEndpointKey
 		return nil
 	}
 }
