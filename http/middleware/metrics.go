@@ -41,7 +41,7 @@ func NewMetrics(r *metrics.Registry, subsystem string) (handler func(*gin.Contex
 		c.Next()
 
 		d := time.Since(t)
-		path := c.Request.URL.String()
+		path := c.Request.URL.Path
 		requestsCount.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Inc()
 		requestsDuration.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Observe(float64(d / time.Microsecond))
 	}
