@@ -92,7 +92,7 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 		Addresses: addrs,
 	})
 	if err != nil {
-		logger.Errorf("[RESOLVER] service connection update failed from registry: `%v`, err: %v", rr.service.Name(), err)
+		logger.Errorf("[RESOLVER] service (`%v`) connection update failed from registry: %v", rr.service.Name(), err)
 		return
 	}
 }
