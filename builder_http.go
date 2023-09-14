@@ -22,8 +22,9 @@ type httpOptions struct {
 	enableLoggingMiddleware bool
 	enableMetricsMiddleware bool
 
-	globalMiddleware []gin.HandlerFunc
-	routingGroups    map[string]http.RoutingGroup
+	globalMiddleware   []gin.HandlerFunc
+	metricsAggregation bool
+	routingGroups      map[string]http.RoutingGroup
 }
 
 func (h *httpOptions) ensure() (err error) {
@@ -33,6 +34,7 @@ func (h *httpOptions) ensure() (err error) {
 
 	return
 }
+
 func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 	log.Printf("merging %s into %s", other.serverName, h.serverName)
 
@@ -44,8 +46,9 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 		enableLoggingMiddleware: h.enableLoggingMiddleware,
 		enableMetricsMiddleware: h.enableMetricsMiddleware,
 
-		globalMiddleware: append(h.globalMiddleware, other.globalMiddleware...),
-		routingGroups:    h.routingGroups,
+		globalMiddleware:   append(h.globalMiddleware, other.globalMiddleware...),
+		metricsAggregation: h.metricsAggregation,
+		routingGroups:      h.routingGroups,
 	}
 
 	for _, othersRoutingGroup := range other.routingGroups {
@@ -59,11 +62,11 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 }
 
 func (h *httpOptions) build(cadreContext context.Context, logger zerolog.Logger, metricsRegistry *metrics.Registry) (httpServer *http.HttpServer, err error) {
-	var serverMiddlewares = []gin.HandlerFunc{}
+	serverMiddlewares := []gin.HandlerFunc{}
 	{
 		if h.enableMetricsMiddleware {
 			var metricsMiddleware gin.HandlerFunc
-			metricsMiddleware, err = middleware.NewMetrics(metricsRegistry, h.serverName)
+			metricsMiddleware, err = middleware.NewMetrics(metricsRegistry, h.serverName, h.metricsAggregation)
 			if err != nil {
 				return
 			}
@@ -136,6 +139,16 @@ func WithHTTPListeningAddress(addr string) HTTPOption {
 	return func(h *httpOptions) error {
 		h.listeningAddress = addr
 
+		return nil
+	}
+}
+
+// WithMetricsAggregation enables path aggregation of endpoint.
+// For example when using asterisk (*) in path and endpoint unpacks all possible values
+// it will aggregate it back to asterisk (*)
+func WithMetricsAggregation(metricsAggregation bool) HTTPOption {
+	return func(h *httpOptions) error {
+		h.metricsAggregation = metricsAggregation
 		return nil
 	}
 }
