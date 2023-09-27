@@ -146,18 +146,18 @@ func WithHTTPListeningAddress(addr string) HTTPOption {
 // WithMetricsAggregation enables path aggregation of endpoint.
 // For example when using asterisk (*) in path and endpoint unpacks all possible values
 // it will aggregate it back to asterisk (*)
-func WithMetricsAggregation(metricsAggregation bool) HTTPOption {
+func WithMetricsAggregation() HTTPOption {
 	return func(h *httpOptions) error {
-		h.metricsAggregation = metricsAggregation
+		h.metricsAggregation = true
 		return nil
 	}
 }
 
 // WithGlobalMiddleware adds new global middleware to the HTTP server
 // default - metrics, logging and recovery (in this order)
-func WithGlobalMiddleware(middlware ...gin.HandlerFunc) HTTPOption {
+func WithGlobalMiddleware(middleware ...gin.HandlerFunc) HTTPOption {
 	return func(h *httpOptions) error {
-		h.globalMiddleware = append(h.globalMiddleware, middlware...)
+		h.globalMiddleware = append(h.globalMiddleware, middleware...)
 
 		return nil
 	}
