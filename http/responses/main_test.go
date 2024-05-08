@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -492,7 +493,7 @@ func TestInternalError(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusInternalServerError,
-			wantBody:     `{"message":"An unexpected error has occured. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
+			wantBody:     `{"message":"An unexpected error has occurred. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
@@ -504,10 +505,8 @@ func TestInternalError(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
-			b := tt.httpTestShit.recorder.Body.String()
-			if b != tt.wantBody {
-				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
-			}
+
+			assert.Equal(t, tt.wantBody, tt.httpTestShit.recorder.Body.String())
 		})
 	}
 }
