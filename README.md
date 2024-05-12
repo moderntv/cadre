@@ -20,6 +20,25 @@ See `_examples` folder for usage details.
 
 Cadre is under heavy development and its API can be changed at any time.
 
+## Default options
+
+Cadre by default handles `SIGINT` and `SIGTERM` signals when using `WithFinisher` option. The path for status component runs on `/status` endpoint and for metrics it is exposed on `/metrics` endpoint.
+When `WithHTTPListeningAddress` is provided, the endpoints are running on given address.
+
+### HTTP
+
+- By default the metrics are not aggregated under `*` character when using routes ended with `*`. Use `WithMetricsAggregation` to aggregate metrics same as on handler side.
+- Logging using `zerolog` is by default on. Use `WithoutLoggingMiddleware` to prevent this behaviour.
+- Metrics are gathered by default which could be exposed using `/metrics` endpoint. Use `WithoutMetricsMiddleware` to prevent this behaviour.
+
+### gRPC
+
+- By default the recovery middleware is on. Use `WithoutRecoveryMiddleware` option to prevent this behaviour.
+- By default reflection is on. Use `WithoutReflection` to prevent reflection.
+- By default the logging middleware is on. It is possible to prevent the logging using `WithoutLogging` option. 
+- Health service is by default on. It could be prevented using `WithoutHealthService`. For health service the `grpc_health_v1` library is used.
+- When channelz is enabled, it is running on port `8192`. It is exposed as `GET` handler on `/channelz/*path`. For channelz the `go-grpc-channelz` is used.
+	
 ## Config
 
 Cadre enables to bind configuration of http/gRPC handlers. By default the `viper` is used as config parser.
