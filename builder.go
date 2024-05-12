@@ -33,10 +33,13 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+// ServiceRegistrator takes care of registrating service into cadre gRPC.
 type ServiceRegistrator func(*grpc.Server)
 
+// Finisher is function type that handles the dealocation of cadre when particular signal is provided.
 type Finisher func(sig os.Signal)
 
+// Builder is cadre top level structure that takes care of subbuilders such as grpcOptions and httpOptions builders.
 type Builder struct {
 	name string // app name
 
@@ -220,6 +223,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 	return
 }
 
+// ensure makes sure that the proper builder options are set. Some of options are in collision.
 func (b *Builder) ensure() (err error) {
 	// check prometheus & metrics. ensure they use the same prometheus registry
 	if b.metrics != nil && b.prometheusRegistry != nil {

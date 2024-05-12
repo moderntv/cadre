@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// NewMetrics instantiates metrics middleware that gathers metrics when HTTP calls are executed.
 func NewMetrics(r *metrics.Registry, subsystem string, metricsAggregation bool) (handler func(*gin.Context), err error) {
 	requestsDuration, err := r.RegisterNewSummaryVec(fmt.Sprintf("http_%v_request_duration_us", subsystem), prometheus.SummaryOpts{
 		Subsystem: subsystem,
