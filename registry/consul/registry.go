@@ -82,7 +82,7 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 		for _, s := range catalog {
 			i := instance{
 				serviceName: service,
-				addr:        fmt.Sprintf("%s:%d", s.Address, s.ServicePort),
+				addr:        fmt.Sprintf("%s:%d", s.Node, s.ServicePort),
 			}
 			instances = append(instances, i)
 		}
