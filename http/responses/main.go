@@ -69,7 +69,7 @@ func Ok(c *gin.Context, data any) {
 	})
 }
 
-// OkWithMeta sets the HTTP response status to 200
+// OkWithMeta sets the HTTP response status to 200.
 func OkWithMeta(c *gin.Context, data any, metadata any) {
 	c.AbortWithStatusJSON(200, gin.H{
 		"data":     data,
@@ -77,12 +77,12 @@ func OkWithMeta(c *gin.Context, data any, metadata any) {
 	})
 }
 
-// Created sets the HTTP response status to 201
+// Created sets the HTTP response status to 201.
 func Created(c *gin.Context, data any) {
 	c.AbortWithStatusJSON(201, SuccessResponse{data})
 }
 
-// BadRequest sets the HTTP response status to 400
+// BadRequest sets the HTTP response status to 400.
 func BadRequest(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(400, ErrorResponse{
 		Message: "The request is not valid in this context",
@@ -90,7 +90,7 @@ func BadRequest(c *gin.Context, errors ...Error) {
 	})
 }
 
-// CannotBind sets the HTTP response status to 400
+// CannotBind sets the HTTP response status to 400.
 func CannotBind(c *gin.Context, err error) {
 	var (
 		msg  = "Sent data do not correspond to the template"
@@ -107,7 +107,7 @@ func CannotBind(c *gin.Context, err error) {
 	})
 }
 
-// Unauthorized sets the HTTP response status to 401
+// Unauthorized sets the HTTP response status to 401.
 func Unauthorized(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(401, ErrorResponse{
 		Message: "You have to be logged in to view this resource",
@@ -115,7 +115,7 @@ func Unauthorized(c *gin.Context, errors ...Error) {
 	})
 }
 
-// Forbidden sets the HTTP response status to 403
+// Forbidden sets the HTTP response status to 403.
 func Forbidden(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(403, ErrorResponse{
 		Message: "You are not allowed to view this resource",
@@ -123,7 +123,7 @@ func Forbidden(c *gin.Context, errors ...Error) {
 	})
 }
 
-// NotFound sets the HTTP response status to 404
+// NotFound sets the HTTP response status to 404.
 func NotFound(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(404, ErrorResponse{
 		Message: "The resource is unavailable",
@@ -131,14 +131,14 @@ func NotFound(c *gin.Context, errors ...Error) {
 	})
 }
 
-// Timeout sets the HTTP response status to 408
+// Timeout sets the HTTP response status to 408.
 func Timeout(c *gin.Context) {
 	c.AbortWithStatusJSON(408, ErrorResponse{
 		Message: "Request timed out",
 	})
 }
 
-// Conflict sets the HTTP response status to 409
+// Conflict sets the HTTP response status to 409.
 func Conflict(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(409, ErrorResponse{
 		Message: "Cannot complete due to a conflict",
@@ -146,7 +146,7 @@ func Conflict(c *gin.Context, errors ...Error) {
 	})
 }
 
-// InternalError sets the HTTP response status to 500
+// InternalError sets the HTTP response status to 500.
 func InternalError(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(500, ErrorResponse{
 		Message: "An unexpected error has occurred. A team of monkeys was already sent to site. " +
@@ -155,7 +155,7 @@ func InternalError(c *gin.Context, errors ...Error) {
 	})
 }
 
-// Unavailable sets the HTTP response status to 503
+// Unavailable sets the HTTP response status to 503.
 func Unavailable(c *gin.Context, errors ...Error) {
 	c.AbortWithStatusJSON(503, ErrorResponse{
 		Message: "Service is temporarily unavailable",

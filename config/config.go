@@ -1,6 +1,6 @@
 package config
 
-// Config is your structure
+// Config represents config structure.
 type Config interface {
 	PostLoad() error
 }

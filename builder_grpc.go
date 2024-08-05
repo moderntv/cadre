@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// GRPC Options
+// GRPC Options.
 type grpcOptions struct {
 	listeningAddress string
 	// whether the grpc server should be on the same http server as the main http server
@@ -68,7 +68,7 @@ func (g *grpcOptions) ensure() (err error) {
 
 type GRPCOption func(*grpcOptions) error
 
-// WithGRPC configures cadre with a GRPC server
+// WithGRPC configures cadre with a GRPC server.
 func WithGRPC(grpcOptions ...GRPCOption) Option {
 	return func(b *Builder) error {
 		if b.grpcOptions == nil {
@@ -86,7 +86,7 @@ func WithGRPC(grpcOptions ...GRPCOption) Option {
 	}
 }
 
-// WithGRPCListeningAddress configures gRPC's standalone server's listening address
+// WithGRPCListeningAddress configures gRPC's standalone server's listening address.
 func WithGRPCListeningAddress(addr string) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.listeningAddress = addr
@@ -95,7 +95,7 @@ func WithGRPCListeningAddress(addr string) GRPCOption {
 	}
 }
 
-// WithGRPCMultiplex configures Cadre to multiplex grpc and http on the same port
+// WithGRPCMultiplex configures Cadre to multiplex grpc and http on the same port.
 func WithGRPCMultiplex() GRPCOption {
 	return func(g *grpcOptions) error {
 		g.multiplexWithHTTP = true
@@ -104,7 +104,7 @@ func WithGRPCMultiplex() GRPCOption {
 	}
 }
 
-// WithService registers a new gRPC service to the Cadre's gRPC server
+// WithService registers a new gRPC service to the Cadre's gRPC server.
 func WithService(name string, registrator ServiceRegistrator) GRPCOption {
 	return func(g *grpcOptions) error {
 		_, ok := g.services[name]
@@ -118,7 +118,7 @@ func WithService(name string, registrator ServiceRegistrator) GRPCOption {
 	}
 }
 
-// WithoutLogging disables logging middleware - default on
+// WithoutLogging disables logging middleware - default on.
 func WithoutLogging() GRPCOption {
 	return func(g *grpcOptions) error {
 		g.enableLoggingMiddleware = false
@@ -135,7 +135,7 @@ func WithLoggingOptions(opts []grpc_zerolog.Option) GRPCOption {
 	}
 }
 
-// WithoutReflection disables gRPC's reflection service - default on
+// WithoutReflection disables gRPC's reflection service - default on.
 func WithoutReflection() GRPCOption {
 	return func(g *grpcOptions) error {
 		g.enableReflection = false
@@ -144,8 +144,8 @@ func WithoutReflection() GRPCOption {
 	}
 }
 
-// WithChannelz enables gRPC's channelz http server and configures its listening address
-// if the listening address is left empty, it will use the default value (:8123)
+// WithChannelz enables gRPC's channelz http server and configures its listening address.
+// If the listening address is left empty, it will use the default value (:8123).
 func WithChannelz(listenAddr string) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.enableChannelz = true
@@ -157,7 +157,7 @@ func WithChannelz(listenAddr string) GRPCOption {
 	}
 }
 
-// WithoutRecovery disables gRPC's recovery middleware
+// WithoutRecovery disables gRPC's recovery middleware.
 func WithoutRecovery() GRPCOption {
 	return func(g *grpcOptions) error {
 		g.enableRecoveryMiddleware = false
@@ -166,7 +166,7 @@ func WithoutRecovery() GRPCOption {
 	}
 }
 
-// WithRecoveryOptions configures gRPC's recovery middleware with custom options
+// WithRecoveryOptions configures gRPC's recovery middleware with custom options.
 func WithRecoveryOptions(opts []grpc_recovery.Option) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.recoveryMiddlewareOptions = opts
@@ -176,7 +176,7 @@ func WithRecoveryOptions(opts []grpc_recovery.Option) GRPCOption {
 }
 
 // WithUnaryInterceptors adds custom grpc unary interceptor(s) to the end of the interceptor chain
-// default order (if not disabled) - ctxtags, logging, recovery, metrics
+// default order (if not disabled) - ctxtags, logging, recovery, metrics.
 func WithUnaryInterceptors(unaryInterceptors ...grpc.UnaryServerInterceptor) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.extraUnaryInterceptors = append(g.extraUnaryInterceptors, unaryInterceptors...)
@@ -186,7 +186,7 @@ func WithUnaryInterceptors(unaryInterceptors ...grpc.UnaryServerInterceptor) GRP
 }
 
 // WithStreamInterceptors adds custom grpc stream interceptor(s) to the end of the interceptor chain
-// default order (if not disabled) - ctxtags, logging, recovery, metrics
+// default order (if not disabled) - ctxtags, logging, recovery, metrics.
 func WithStreamInterceptors(streamInterceptors ...grpc.StreamServerInterceptor) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.extraStreamInterceptors = append(g.extraStreamInterceptors, streamInterceptors...)

@@ -35,7 +35,7 @@ func newOptions() *options {
 
 type option func(*options) error
 
-// WithWatch will make the registry watch the input file for changes and update accordingly. Default is false
+// WithWatch will make the registry watch the input file for changes and update accordingly. Default is false.
 func WithWatch(watchA ...bool) option {
 	watch := true
 	if len(watchA) > 0 {

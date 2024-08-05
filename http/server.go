@@ -68,7 +68,6 @@ func (server *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	server.router.ServeHTTP(w, req)
 }
 
-// info functions
 func (server *HttpServer) Name() string {
 	return server.name
 }

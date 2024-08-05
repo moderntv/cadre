@@ -14,7 +14,7 @@ import (
 
 type Option func(*Builder) error
 
-// WithContext supplies custom context for the cadre server. This is useful for graceful shutdown
+// WithContext supplies custom context for the cadre server. This is useful for graceful shutdown.
 func WithContext(ctx context.Context) Option {
 	return func(options *Builder) error {
 		options.ctx = ctx
@@ -23,7 +23,7 @@ func WithContext(ctx context.Context) Option {
 	}
 }
 
-// WithFinisher adds a callback to be called for various signals (SIGINT, SIGTERM by default) which can be optionally set
+// WithFinisher adds a callback to be called for various signals (SIGINT, SIGTERM by default) which can be optionally set.
 func WithFinisher(cb Finisher, handledSigs ...os.Signal) Option {
 	return func(options *Builder) error {
 		if options.finisherCallback != nil {
@@ -40,7 +40,7 @@ func WithFinisher(cb Finisher, handledSigs ...os.Signal) Option {
 }
 
 // WithLogger allows configuring cadre with custom zerolog logger.
-// If not used Cadre will be configured with zerolog.Nop()
+// If not used Cadre will be configured with zerolog.Nop().
 func WithLogger(logger zerolog.Logger) Option {
 	return func(options *Builder) error {
 		options.logger = logger
@@ -49,7 +49,7 @@ func WithLogger(logger zerolog.Logger) Option {
 	}
 }
 
-// WithStatus allows replacing the default status with a custom pre-configured one
+// WithStatus allows replacing the default status with a custom pre-configured one.
 func WithStatus(status *status.Status) Option {
 	return func(options *Builder) error {
 		options.status = status
@@ -59,9 +59,9 @@ func WithStatus(status *status.Status) Option {
 }
 
 // WithStatusListeningAddress is meant to configure cadre to use
-// a separate http server for status endpoint - useful for putting it behind firewall
+// a separate http server for status endpoint - useful for putting it behind firewall.
 // Default is to use the first HTTP server's listening address merging them together. This may cause problems
-// when a conflicting route is configured
+// when a conflicting route is configured.
 func WithStatusListeningAddress(serverListeningAddress string) Option {
 	return func(options *Builder) error {
 		options.statusHTTPServerAddr = serverListeningAddress
@@ -72,7 +72,7 @@ func WithStatusListeningAddress(serverListeningAddress string) Option {
 
 // WithMetricsRegistry allows replacing the default metrics registry with a custom pre-configured one.
 // If used, the prometheus registry from metrics Registry will replace the default prometheus registry.
-// Do not use with WithPrometheusRegistry
+// Do not use with WithPrometheusRegistry.
 func WithMetricsRegistry(metrics *metrics.Registry) Option {
 	return func(options *Builder) error {
 		options.metrics = metrics
@@ -94,7 +94,7 @@ func WithPrometheusRegistry(registry *prometheus.Registry) Option {
 // WithPrometheusListeningAddress is meant to configure cadre to use
 // a separate http server for prometheus - useful for putting it behind firewall
 // Default is to use the first HTTP server's listening address merging them together. This may cause problems
-// when a conflicting route is configured
+// when a conflicting route is configured.
 func WithMetricsListeningAddress(serverListeningAddress string) Option {
 	return func(options *Builder) error {
 		options.metricsHTTPServerAddr = serverListeningAddress

@@ -63,7 +63,7 @@ type Builder struct {
 	httpOptions []*httpOptions
 }
 
-// NewBuilder creates a new Builder instance and allows the user to configure the Cadre server by various options
+// NewBuilder creates a new Builder instance and allows the user to configure the Cadre server by various options.
 func NewBuilder(name string, options ...Option) (b *Builder, err error) {
 	b = &Builder{
 		name:        name,
@@ -90,7 +90,7 @@ func NewBuilder(name string, options ...Option) (b *Builder, err error) {
 	return
 }
 
-// Build validates the Builder's configuration and creates a new Cadre server
+// Build validates the Builder's configuration and creates a new Cadre server.
 func (b *Builder) Build() (c *cadre, err error) {
 	err = b.ensure()
 	if err != nil {
