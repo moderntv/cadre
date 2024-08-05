@@ -95,7 +95,7 @@ func (c *cadre) Start() (err error) {
 	return
 }
 
-// shutdown the context and waits for WaitGroup of goroutines
+// shutdown the context and waits for WaitGroup of goroutines.
 func (c *cadre) shutdown() error {
 	c.ctxCancel()
 	c.swg.Wait()
@@ -103,8 +103,8 @@ func (c *cadre) shutdown() error {
 	return nil
 }
 
-// This function shutdown the Start function that is waiting for sigsDone. The Start function initiates the context
-// cancelation and waits
+// This function shutdown the Start function that is waiting for sigsDone.
+// The Start function initiates the context cancelation and waits.
 func (c *cadre) Shutdown() error {
 	c.finalizerDone <- true
 	close(c.finalizerDone)

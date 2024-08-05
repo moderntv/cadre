@@ -21,7 +21,7 @@ type RegistryChange struct {
 	Type     RegistryChangeType
 }
 
-// Registry provides a way for services to register/deregister in services and resolve service name to an array of available (healthy) endpoints
+// Registry provides a way for services to register/deregister in services and resolve service name to an array of available (healthy) endpoints.
 type Registry interface {
 	Register(serviceInstance Instance) error
 	Deregister(serviceInstance Instance) error

@@ -49,7 +49,7 @@ func (m *Manager) Load(dst any) (err error) {
 	return
 }
 
-// Subscribe returns a channel which will receive message on change
+// Subscribe returns a channel which will receive message on change.
 func (m *Manager) Subscribe() (chan source.ConfigChange, error) {
 	if m.watcher == nil {
 		var err error
@@ -64,7 +64,7 @@ func (m *Manager) Subscribe() (chan source.ConfigChange, error) {
 	return msgCh, nil
 }
 
-// Subscribe returns a channel which will receive message on change
+// Subscribe returns a channel which will receive message on change.
 func (m *Manager) Unsubscribe(msgCh chan source.ConfigChange) {
 	m.watchUnsubCh <- msgCh
 }

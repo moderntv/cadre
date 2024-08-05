@@ -2,7 +2,7 @@ package metrics
 
 import "github.com/prometheus/client_golang/prometheus"
 
-// SummaryVec
+// NewSummaryVec creates Prometheus SummaryVec.
 func (registry *Registry) NewSummaryVec(opts prometheus.SummaryOpts, labels []string) *prometheus.SummaryVec {
 	opts.Namespace = registry.namespace
 
@@ -32,7 +32,7 @@ func (registry *Registry) RegisterOrGetNewSummaryVec(name string, opts prometheu
 	return
 }
 
-// Counter
+// NewCounter creates Prometheus Counter.
 func (registry *Registry) NewCounter(opts prometheus.CounterOpts) prometheus.Counter {
 	opts.Namespace = registry.namespace
 
@@ -61,7 +61,7 @@ func (registry *Registry) RegisterOrGetNewCounter(name string, opts prometheus.C
 	return
 }
 
-// CounterVec
+// NewCounterVec creates Prometheus CounterVec.
 func (registry *Registry) NewCounterVec(opts prometheus.CounterOpts, labels []string) *prometheus.CounterVec {
 	opts.Namespace = registry.namespace
 
@@ -91,7 +91,7 @@ func (registry *Registry) RegisterOrGetNewCounterVec(name string, opts prometheu
 	return
 }
 
-// Gauge
+// NewGauge creates Prometheus Gauge.
 func (registry *Registry) NewGauge(opts prometheus.GaugeOpts) prometheus.Gauge {
 	opts.Namespace = registry.namespace
 
@@ -121,7 +121,7 @@ func (registry *Registry) RegisterOrGetNewGauge(name string, opts prometheus.Gau
 	return
 }
 
-// GaugeVec
+// NewGaugeVec creates Prometheus GaugeVec.
 func (registry *Registry) NewGaugeVec(opts prometheus.GaugeOpts, labels []string) *prometheus.GaugeVec {
 	opts.Namespace = registry.namespace
 

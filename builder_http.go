@@ -13,7 +13,7 @@ import (
 	"github.com/moderntv/cadre/metrics"
 )
 
-// HTTP Options
+// HTTP Options.
 type httpOptions struct {
 	serverName       string
 	services         []string
@@ -110,7 +110,7 @@ func defaultHTTPOptions() *httpOptions {
 
 type HTTPOption func(*httpOptions) error
 
-// WithHTTP enables HTTP server
+// WithHTTP enables HTTP server.
 func WithHTTP(serverName string, myHTTPOptions ...HTTPOption) Option {
 	return func(options *Builder) error {
 		if options.httpOptions == nil {
@@ -134,7 +134,7 @@ func WithHTTP(serverName string, myHTTPOptions ...HTTPOption) Option {
 	}
 }
 
-// WithHTTPListeningAddress configures the HTTP server's listening address
+// WithHTTPListeningAddress configures the HTTP server's listening address.
 func WithHTTPListeningAddress(addr string) HTTPOption {
 	return func(h *httpOptions) error {
 		h.listeningAddress = addr
@@ -145,7 +145,7 @@ func WithHTTPListeningAddress(addr string) HTTPOption {
 
 // WithMetricsAggregation enables path aggregation of endpoint.
 // For example when using asterisk (*) in path and endpoint unpacks all possible values
-// it will aggregate it back to asterisk (*)
+// it will aggregate it back to asterisk (*).
 func WithMetricsAggregation() HTTPOption {
 	return func(h *httpOptions) error {
 		h.metricsAggregation = true
@@ -154,7 +154,7 @@ func WithMetricsAggregation() HTTPOption {
 }
 
 // WithGlobalMiddleware adds new global middleware to the HTTP server
-// default - metrics, logging and recovery (in this order)
+// default - metrics, logging and recovery (in this order).
 func WithGlobalMiddleware(middleware ...gin.HandlerFunc) HTTPOption {
 	return func(h *httpOptions) error {
 		h.globalMiddleware = append(h.globalMiddleware, middleware...)
@@ -164,7 +164,7 @@ func WithGlobalMiddleware(middleware ...gin.HandlerFunc) HTTPOption {
 }
 
 // WithRoute adds new route to the HTTP server
-// returns an error if the path-method combo is already registered
+// returns an error if the path-method combo is already registered.
 func WithRoute(method, path string, handlers ...gin.HandlerFunc) HTTPOption {
 	return WithRoutingGroup(http.RoutingGroup{
 		Base: "",
@@ -177,7 +177,7 @@ func WithRoute(method, path string, handlers ...gin.HandlerFunc) HTTPOption {
 }
 
 // WithRoutingGroup adds a new routing group to the HTTP server
-// may cause gin configuration eror at runtime. use with care
+// may cause gin configuration eror at runtime. Use with care.
 func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 	return func(h *httpOptions) (err error) {
 		g, ok := h.routingGroups[group.Base]
@@ -211,7 +211,6 @@ func WithoutMetricsMiddleware() HTTPOption {
 	}
 }
 
-// ---------------------------------------------------------------
 func automaticMethods(group http.RoutingGroup) {
 	for path, methodHandlers := range group.Routes {
 		getHandlers, ok := group.Routes[path]["GET"]
