@@ -80,10 +80,10 @@ func (registry *Registry) RegisterOrGet(name string, c prometheus.Collector) (cR
 	if err == nil {
 		return
 	}
-	if err != nil && err != ErrMetricNotFound {
+
+	if !errors.Is(err, ErrMetricNotFound) {
 		return
 	}
-	// err = ErrMetricNotFound
 
 	err = registry.Register(name, c)
 	if err != nil {
