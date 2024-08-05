@@ -7,14 +7,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-	"google.golang.org/grpc"
-
 	"github.com/moderntv/cadre"
 	"github.com/moderntv/cadre/_examples/greeter"
 	greeter_pb "github.com/moderntv/cadre/_examples/proto/greeter"
 	"github.com/moderntv/cadre/http"
 	"github.com/moderntv/cadre/http/responses"
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
 )
 
 func main() {

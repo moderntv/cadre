@@ -4,10 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/moderntv/cadre/http/responses"
 	"github.com/rs/zerolog"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HttpServer struct {

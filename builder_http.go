@@ -6,11 +6,10 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-
 	"github.com/moderntv/cadre/http"
 	"github.com/moderntv/cadre/http/middleware"
 	"github.com/moderntv/cadre/metrics"
+	"github.com/rs/zerolog"
 )
 
 // HTTP Options.

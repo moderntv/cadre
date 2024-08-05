@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/moderntv/cadre/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func NewMetrics(r *metrics.Registry, subsystem string, metricsAggregation bool) (handler func(*gin.Context), err error) {

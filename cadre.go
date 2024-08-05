@@ -10,12 +10,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/moderntv/cadre/metrics"
+	"github.com/moderntv/cadre/status"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
-
-	"github.com/moderntv/cadre/metrics"
-	"github.com/moderntv/cadre/status"
 )
 
 type Cadre interface {

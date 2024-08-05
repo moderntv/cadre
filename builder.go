@@ -12,6 +12,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/moderntv/cadre/http"
+	"github.com/moderntv/cadre/http/responses"
+	"github.com/moderntv/cadre/metrics"
+	"github.com/moderntv/cadre/status"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	channelz "github.com/rantav/go-grpc-channelz"
@@ -26,11 +30,6 @@ import (
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-
-	"github.com/moderntv/cadre/http"
-	"github.com/moderntv/cadre/http/responses"
-	"github.com/moderntv/cadre/metrics"
-	"github.com/moderntv/cadre/status"
 )
 
 type ServiceRegistrator func(*grpc.Server)

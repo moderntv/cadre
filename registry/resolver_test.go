@@ -4,11 +4,10 @@ import (
 	"net/url"
 	"testing"
 
-	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/serviceconfig"
-
 	"github.com/moderntv/cadre/registry"
 	"github.com/moderntv/cadre/registry/static"
+	"google.golang.org/grpc/resolver"
+	"google.golang.org/grpc/serviceconfig"
 )
 
 func Test_resolverBuilder_Build(t *testing.T) {

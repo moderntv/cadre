@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
-
 	cerr "github.com/moderntv/cadre/errors"
 )
 

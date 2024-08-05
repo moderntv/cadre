@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-
 	"github.com/moderntv/cadre"
 	"github.com/moderntv/cadre/http"
 	"github.com/moderntv/cadre/http/responses"
+	"github.com/rs/zerolog"
 )
 
 func main() {
