@@ -46,7 +46,7 @@ type registryResolver struct {
 
 func newResolver(target resolver.Target, registry Registry, cc resolver.ClientConn) (res *registryResolver) {
 	res = &registryResolver{
-		service:  &service{name: target.Endpoint()}, // nolint:staticcheck
+		service:  &service{name: target.Endpoint()},
 		registry: registry,
 		cc:       cc,
 	}
