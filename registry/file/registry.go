@@ -11,12 +11,16 @@ import (
 )
 
 type fileRegistry struct {
-	v         *viper.Viper
-	sLock     sync.RWMutex                   //protects services *AND* instances
-	services  servicesMap                    //service:[]instance
-	instances map[string]map[string]struct{} // service:instance:true
-	wLock     sync.RWMutex
-	watchers  map[string][]chan registry.RegistryChange
+	v *viper.Viper
+
+	// sLock protects services and instances
+	sLock     sync.RWMutex
+	services  servicesMap
+	instances map[string]map[string]struct{}
+
+	// wLock protects watchers
+	wLock    sync.RWMutex
+	watchers map[string][]chan registry.RegistryChange
 }
 
 type options struct {

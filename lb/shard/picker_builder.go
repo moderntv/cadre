@@ -24,7 +24,7 @@ func (pb *pickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 		logger.Infof("shard balancer: building new picker: %v", info)
 	}
 
-	if len(info.ReadySCs) <= 0 {
+	if len(info.ReadySCs) == 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
 

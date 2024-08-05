@@ -315,9 +315,7 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 		streamInterceptors = append(streamInterceptors, grpc_recovery.StreamServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...))
 	}
 
-	//
-	//create grpc server
-	//
+	// create grpc server
 	c.grpcAddr = b.grpcOptions.listeningAddress
 	c.grpcServer = grpc.NewServer(
 		grpc_middleware.WithUnaryServerChain(unaryInterceptors...),
