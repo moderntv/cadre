@@ -6,7 +6,7 @@ test:
 
 .PHONY: lint
 lint:
-	@golangci-lint run --timeout 5m -D structcheck,unused -E bodyclose,exhaustive,exportloopref,gosec,misspell,rowserrcheck,unconvert,unparam --out-format tab --sort-results --tests=false
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint run
 
 .PHONY: tools-install
 tools-install:
