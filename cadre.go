@@ -144,7 +144,6 @@ func (c *cadre) healthServerCheck() {
 
 			case status.WARN, status.ERROR:
 				c.grpcHealthService.Shutdown()
-
 			}
 		case <-c.ctx.Done():
 			return
