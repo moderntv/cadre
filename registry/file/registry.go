@@ -5,9 +5,8 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/viper"
-
 	"github.com/moderntv/cadre/registry"
+	"github.com/spf13/viper"
 )
 
 type fileRegistry struct {

@@ -4,12 +4,11 @@ import (
 	"errors"
 	"os"
 
+	"github.com/moderntv/cadre/metrics"
+	"github.com/moderntv/cadre/status"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"golang.org/x/net/context"
-
-	"github.com/moderntv/cadre/metrics"
-	"github.com/moderntv/cadre/status"
 )
 
 type Option func(*Builder) error
