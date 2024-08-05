@@ -156,7 +156,9 @@ func (c *cadre) healthServerCheck() {
 func (c *cadre) startGRPC() {
 	defer c.swg.Done()
 
-	c.logger.Debug().Interface("grpclistener", c.grpcListener)
+	c.logger.Debug().
+		Interface("listener", c.grpcListener).
+		Msg("grpc listener")
 	if c.grpcListener == nil || c.grpcServer == nil {
 		c.logger.Trace().Msg("standalone grpc server disabled")
 
