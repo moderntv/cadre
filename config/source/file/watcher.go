@@ -42,7 +42,7 @@ func (w *watcher) C() chan source.ConfigChange {
 	go func() {
 		for event := range w.fsnw.Events {
 			switch event.Op {
-			case fsnotify.Remove, fsnotify.Create: //, fsnotify.Chmod:
+			case fsnotify.Remove, fsnotify.Create: // fsnotify.Chmod:
 				continue
 			case fsnotify.Rename:
 				_, err := os.Stat(event.Name)
