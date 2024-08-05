@@ -1,4 +1,5 @@
 name: golangci-lint
+
 on:
     push:
     pull_request:
@@ -6,17 +7,22 @@ permissions:
     contents: read
     # Optional: allow read access to pull request. Use with `only-new-issues` option.
     # pull-requests: read
+
 jobs:
     golangci:
         name: lint
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/setup-go@v3
-              with:
-                  go-version: 1.19
-            - uses: actions/checkout@v3
+          - name: Setup Go
+            uses: actions/setup-go@v5
+            with:
+                go-version: 1.22
 
-            - name: install tools
-              run: make tools-install
-            - name: golangci-lint
-              run: make lint
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Install tools
+            run: make tools-install
+
+          - name: golangci-lint
+            run: make lint
