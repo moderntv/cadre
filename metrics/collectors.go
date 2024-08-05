@@ -45,6 +45,7 @@ func (registry *Registry) RegisterNewCounter(name string, opts prometheus.Counte
 
 	return
 }
+
 func (registry *Registry) RegisterOrGetNewCounter(name string, opts prometheus.CounterOpts) (c prometheus.Counter, err error) {
 	c = registry.NewCounter(opts)
 	cReturned, err := registry.RegisterOrGet(name, c)

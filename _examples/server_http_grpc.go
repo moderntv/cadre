@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	var logger = zerolog.New(zerolog.ConsoleWriter{
+	logger := zerolog.New(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
 		TimeFormat: time.RFC3339,
 	}).With().Timestamp().Logger()
@@ -51,8 +51,8 @@ func main() {
 			cadre.WithRoutingGroup(http.RoutingGroup{
 				Base: "",
 				Routes: map[string]map[string][]gin.HandlerFunc{
-					"/hello": map[string][]gin.HandlerFunc{
-						"GET": []gin.HandlerFunc{
+					"/hello": {
+						"GET": {
 							func(c *gin.Context) {
 								responses.Ok(c, gin.H{
 									"hello": "world",
@@ -60,8 +60,8 @@ func main() {
 							},
 						},
 					},
-					"/greet": map[string][]gin.HandlerFunc{
-						"GET": []gin.HandlerFunc{
+					"/greet": {
+						"GET": {
 							func(c *gin.Context) {
 								name := c.DefaultQuery("name", "world")
 								res, err := greeterClient.SayHi(context.Background(), &greeter_pb.GreetingRequest{Name: name})

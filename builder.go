@@ -374,7 +374,6 @@ func (b *Builder) buildHTTP(_ *cadre, cadreContext context.Context) (httpServers
 
 	for _, httpOptions := range mergedHTTPOptions {
 		httpServers[httpOptions.listeningAddress], err = httpOptions.build(cadreContext, b.logger, b.metrics)
-
 		if err != nil {
 			return
 		}
