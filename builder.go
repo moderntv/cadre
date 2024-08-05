@@ -198,7 +198,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 		// http+grpc multiplexing
 		if b.grpcOptions != nil && b.grpcOptions.listeningAddress == addr {
 			h = stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-				log.Printf("handling http request. protomajor = %v; content-type = %v; headers = %v", r.ProtoMajor, r.Header.Get("content-type"), r.Header)
+				log.Printf("handling http request. protomajor = %v; content-type = %v; headers = %v", r.ProtoMajor, r.Header.Get("Content-Type"), r.Header)
 				if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
 					c.grpcServer.ServeHTTP(w, r)
 				} else {
