@@ -1,0 +1,65 @@
+run:
+  timeout: 3m
+  tests: false
+
+linters:
+  enable-all: true
+  disable:
+    # restrictive
+    - exhaustruct
+    - varnamelen
+    - nlreturn
+    - funlen
+    - nonamedreturns
+    - gochecknoglobals
+    - wsl
+    - nakedret
+    # deprecated
+    - execinquery
+    - gomnd
+    # possibly enable in future
+    - wrapcheck
+    - ireturn
+    - err113
+    - unused
+    - tagliatelle
+    - revive
+    - forcetypeassert
+    - mnd
+    - stylecheck
+    - lll
+    - gochecknoinits
+    - containedctx
+    - gocognit
+    - godox
+    - cyclop
+    - nilerr
+
+linters-settings:
+  depguard:
+    rules:
+      main:
+        list-mode: strict
+        files:
+           - $all
+        allow:
+          - $gostd
+          - github.com/rkollar/go-grpc-middleware
+          - github.com/moderntv/cadre
+          - github.com/prometheus/client_golang
+          - github.com/gin-gonic/gin
+          - github.com/cespare/xxhash/v2
+          - github.com/fsnotify/fsnotify
+          - github.com/rs/zerolog
+          - github.com/moderntv/hashring
+          - github.com/rantav/go-grpc-channelz
+          - github.com/grpc-ecosystem/go-grpc-prometheus
+          - github.com/spf13/viper
+
+output:
+  sort-results: true
+  formats:
+    - format: colored-line-number
+      path: stdout
+    - format: tab
+      path: golangci-lint.out
