@@ -73,28 +73,29 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 		Datacenter: r.datacenter,
 	}
 	for {
+		catalog, _, err := r.client.Catalog().Service(service, "", q)
+		if err != nil {
+			continue
+		}
+
+		instances := make([]registry.Instance, 0, len(catalog))
+		for _, s := range catalog {
+			i := instance{
+				serviceName: service,
+				addr:        fmt.Sprintf("%s:%d", s.Address, s.ServicePort),
+			}
+			instances = append(instances, i)
+		}
+
+		changed := r.writeChanges(r.services[service], instances, ch)
+		if changed {
+			r.mu.Lock()
+			r.services[service] = instances
+			r.mu.Unlock()
+		}
+
 		select {
 		case <-ticker.C:
-			catalog, _, err := r.client.Catalog().Service(service, "", q)
-			if err != nil {
-				continue
-			}
-
-			instances := make([]registry.Instance, 0, len(catalog))
-			for _, s := range catalog {
-				i := instance{
-					serviceName: service,
-					addr:        fmt.Sprintf("%s:%d", s.Address, s.ServicePort),
-				}
-				instances = append(instances, i)
-			}
-
-			changed := r.writeChanges(r.services[service], instances, ch)
-			if changed {
-				r.mu.Lock()
-				r.services[service] = instances
-				r.mu.Unlock()
-			}
 
 		case <-ctx.Done():
 			return
