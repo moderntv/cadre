@@ -17,5 +17,7 @@ func (this *instance) Address() string {
 	return this.addr
 }
 
-type servicesMap map[string]instances
-type instances []registry.Instance
+type (
+	servicesMap map[string]instances
+	instances   []registry.Instance
+)

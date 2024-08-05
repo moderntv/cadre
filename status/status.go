@@ -27,9 +27,7 @@ type Status struct {
 	components map[string]*ComponentStatus
 }
 
-var (
-	ErrAlreadyExists = errors.New("component already exists")
-)
+var ErrAlreadyExists = errors.New("component already exists")
 
 func NewStatus(version string) (status *Status) {
 	hostname, err := os.Hostname()
@@ -125,18 +123,21 @@ func (cs *ComponentStatus) SetStatus(statusType StatusType, message string) {
 
 	cs.mu.Unlock()
 }
+
 func (cs *ComponentStatus) Status() StatusType {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
 
 	return cs.status
 }
+
 func (cs *ComponentStatus) Message() string {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
 
 	return cs.message
 }
+
 func (cs *ComponentStatus) LastUpdate() time.Time {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()

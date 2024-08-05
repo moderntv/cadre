@@ -4,10 +4,12 @@ import (
 	"context"
 )
 
-type builderOption func(*builderOptions) error
-type builderOptions struct {
-	shardKeyFunc func(context.Context) string
-}
+type (
+	builderOption  func(*builderOptions) error
+	builderOptions struct {
+		shardKeyFunc func(context.Context) string
+	}
+)
 
 func defaultBuilderOptions() builderOptions {
 	return builderOptions{
