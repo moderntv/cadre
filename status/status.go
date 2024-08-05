@@ -70,12 +70,12 @@ func (s *Status) RegisterOrGet(name string) (cs *ComponentStatus, err error) {
 	if err == nil {
 		return
 	}
-	if err != nil && err != ErrAlreadyExists {
+
+	if !errors.Is(err, ErrAlreadyExists) {
 		return
 	}
-	// err = ErrAlreadyExists
-	err = nil
 
+	err = nil
 	cs = s.components[name]
 
 	return
