@@ -20,7 +20,8 @@ type service struct {
 }
 
 // newService creates a new service instance. if healthService is disabled in Server, it can be nil
-// nolint:deadcode
+//
+//nolint:deadcode
 func newService(name string, cs *status.ComponentStatus, healthService *health.Server) (i Service) {
 	i = &service{
 		name: name,
