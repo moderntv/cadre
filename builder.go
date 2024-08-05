@@ -1,6 +1,7 @@
 package cadre
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -114,7 +115,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 	}
 
 	if b.httpOptions == nil && b.grpcOptions == nil {
-		err = fmt.Errorf("both grpc and http will be disabled. what do you want me to do?")
+		err = errors.New("both grpc and http will be disabled. what do you want me to do?")
 		return
 	}
 
@@ -222,7 +223,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 func (b *Builder) ensure() (err error) {
 	// check prometheus & metrics. ensure they use the same prometheus registry
 	if b.metrics != nil && b.prometheusRegistry != nil {
-		err = fmt.Errorf("pass either existing metrics.Registry or prometheus.Registry. not both")
+		err = errors.New("pass either existing metrics.Registry or prometheus.Registry. not both")
 		return
 	}
 	// initialize metrics
