@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -43,8 +44,9 @@ func NewMetrics(r *metrics.Registry, subsystem string, metricsAggregation bool) 
 			path = c.FullPath()
 		}
 
-		requestsCount.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Inc()
-		requestsDuration.WithLabelValues(path, fmt.Sprintf("%v", c.Writer.Status())).Observe(float64(d / time.Microsecond))
+		status := strconv.Itoa(c.Writer.Status())
+		requestsCount.WithLabelValues(path, status).Inc()
+		requestsDuration.WithLabelValues(path, status).Observe(float64(d / time.Microsecond))
 	}
 
 	return
