@@ -1,8 +1,6 @@
-CC=go
-
 .PHONY: test
 test:
-	$(CC) test -cover ./...
+	go test -race -timeout 3m -coverprofile cp.out ./...
 
 .PHONY: lint
 lint:
@@ -11,6 +9,3 @@ lint:
 .PHONY: tools-install
 tools-install:
 	cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
-
-stats:
-	scc --exclude-dir 'vendor,node_modules,data,.git,docker/etcdkeeper,utils' --wide
