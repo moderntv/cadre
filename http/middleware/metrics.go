@@ -46,7 +46,7 @@ func NewMetrics(r *metrics.Registry, subsystem string, metricsAggregation bool) 
 
 		status := strconv.Itoa(c.Writer.Status())
 		requestsCount.WithLabelValues(path, status).Inc()
-		requestsDuration.WithLabelValues(path, status).Observe(float64(d / time.Microsecond))
+		requestsDuration.WithLabelValues(path, status).Observe(float64(d.Microseconds()))
 	}
 
 	return
