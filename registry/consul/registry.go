@@ -99,7 +99,6 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 
 		case <-ctx.Done():
 			return
-
 		}
 	}
 }
