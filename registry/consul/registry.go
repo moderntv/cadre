@@ -123,16 +123,13 @@ func (r *consulRegistry) resolveService(service string, ch chan<- registry.Regis
 		logger.Warningf("[CONSUL REGISTRY] could not find any instances for service (%s)", service)
 	}
 
-	changed := r.writeChanges(r.services[service], instances, ch)
-	if changed {
-		r.mu.Lock()
-		r.services[service] = instances
-		r.mu.Unlock()
-		logger.Infof("[CONSUL REGISTRY] updated registry to %d instances for service (%s)", len(instances), service)
-	}
+	r.writeChanges(service, instances, ch)
 }
 
-func (r *consulRegistry) writeChanges(oldInstances, newInstances []registry.Instance, ch chan<- registry.RegistryChange) bool {
+func (r *consulRegistry) writeChanges(service string, newInstances []registry.Instance, ch chan<- registry.RegistryChange) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	oldInstances := r.services[service]
 	changed := false
 	for _, oldInstance := range oldInstances {
 		containsFunc := func(i registry.Instance) bool {
@@ -160,5 +157,8 @@ func (r *consulRegistry) writeChanges(oldInstances, newInstances []registry.Inst
 		}
 	}
 
-	return changed
+	if changed {
+		r.services[service] = newInstances
+		logger.Infof("[CONSUL REGISTRY] updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
+	}
 }
