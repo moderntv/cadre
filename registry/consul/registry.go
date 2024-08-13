@@ -123,8 +123,6 @@ func (r *consulRegistry) resolveService(service string, ch chan<- registry.Regis
 		r.mu.Unlock()
 		logger.Infof("[CONSUL REGISTRY] updated registry to %d instances for service (%s)", len(instances), service)
 	}
-
-	return
 }
 
 func (r *consulRegistry) writeChanges(oldInstances, newInstances []registry.Instance, ch chan<- registry.RegistryChange) bool {
