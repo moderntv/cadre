@@ -106,10 +106,10 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 func (r *consulRegistry) writeChanges(oldInstances, newInstances []registry.Instance, ch chan<- registry.RegistryChange) bool {
 	changed := false
 	for _, oldInstance := range oldInstances {
-		contains := func(i registry.Instance) bool {
+		containsFunc := func(i registry.Instance) bool {
 			return i.Address() == oldInstance.Address()
 		}
-		if !slices.ContainsFunc(newInstances, contains) {
+		if !slices.ContainsFunc(newInstances, containsFunc) {
 			changed = true
 			ch <- registry.RegistryChange{
 				Instance: oldInstance,
@@ -119,10 +119,10 @@ func (r *consulRegistry) writeChanges(oldInstances, newInstances []registry.Inst
 	}
 
 	for _, newInstance := range newInstances {
-		contains := func(i registry.Instance) bool {
+		containsFunc := func(i registry.Instance) bool {
 			return i.Address() == newInstance.Address()
 		}
-		if !slices.ContainsFunc(oldInstances, contains) {
+		if !slices.ContainsFunc(oldInstances, containsFunc) {
 			changed = true
 			ch <- registry.RegistryChange{
 				Instance: newInstance,
