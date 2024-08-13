@@ -74,12 +74,24 @@ func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, 
 }
 
 func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- registry.RegistryChange) {
-	r.resolveService(service, ch)
+	var consulService string
+	alias, ok := r.aliases[service]
+	if ok {
+		consulService = alias
+		logger.Infof("[CONSUL REGISTRY] using alias (%s) to resolve service (%s)", alias, service)
+	}
+
+	if !ok {
+		consulService = service
+		logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
+	}
+
+	r.resolveService(consulService, ch)
 	ticker := time.NewTicker(r.refreshPeriod)
 	for {
 		select {
 		case <-ticker.C:
-			r.resolveService(service, ch)
+			r.resolveService(consulService, ch)
 
 		case <-ctx.Done():
 			return
@@ -91,15 +103,10 @@ func (r *consulRegistry) resolveService(service string, ch chan<- registry.Regis
 	q := &consul.QueryOptions{
 		Datacenter: r.datacenter,
 	}
-	name, ok := r.aliases[service]
-	if !ok {
-		name = service
-		logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
-	}
 
-	catalog, _, err := r.client.Catalog().Service(name, "", q)
+	catalog, _, err := r.client.Catalog().Service(service, "", q)
 	if err != nil {
-		logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", name, err)
+		logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", service, err)
 		return
 	}
 
