@@ -74,51 +74,57 @@ func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, 
 }
 
 func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- registry.RegistryChange) {
+	r.resolveService(service, ch)
 	ticker := time.NewTicker(r.refreshPeriod)
-	q := &consul.QueryOptions{
-		Datacenter: r.datacenter,
-	}
 	for {
-		name, ok := r.aliases[service]
-		if !ok {
-			name = service
-			logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
-		}
-
-		catalog, _, err := r.client.Catalog().Service(name, "", q)
-		if err != nil {
-			logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", name, err)
-			continue
-		}
-
-		instances := make([]registry.Instance, 0, len(catalog))
-		for _, s := range catalog {
-			i := instance{
-				serviceName: service,
-				addr:        fmt.Sprintf("%s:%d", s.Node, s.ServicePort),
-			}
-			instances = append(instances, i)
-		}
-
-		if len(instances) == 0 {
-			logger.Warningf("[CONSUL REGISTRY] could not find any instances for service (%s)", service)
-		}
-
-		changed := r.writeChanges(r.services[service], instances, ch)
-		if changed {
-			r.mu.Lock()
-			r.services[service] = instances
-			r.mu.Unlock()
-			logger.Infof("[CONSUL REGISTRY] updated registry to %d instances for service (%s)", len(instances), service)
-		}
-
 		select {
 		case <-ticker.C:
+			r.resolveService(service, ch)
 
 		case <-ctx.Done():
 			return
 		}
 	}
+}
+
+func (r *consulRegistry) resolveService(service string, ch chan<- registry.RegistryChange) {
+	q := &consul.QueryOptions{
+		Datacenter: r.datacenter,
+	}
+	name, ok := r.aliases[service]
+	if !ok {
+		name = service
+		logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
+	}
+
+	catalog, _, err := r.client.Catalog().Service(name, "", q)
+	if err != nil {
+		logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", name, err)
+		return
+	}
+
+	instances := make([]registry.Instance, 0, len(catalog))
+	for _, s := range catalog {
+		i := instance{
+			serviceName: service,
+			addr:        fmt.Sprintf("%s:%d", s.Node, s.ServicePort),
+		}
+		instances = append(instances, i)
+	}
+
+	if len(instances) == 0 {
+		logger.Warningf("[CONSUL REGISTRY] could not find any instances for service (%s)", service)
+	}
+
+	changed := r.writeChanges(r.services[service], instances, ch)
+	if changed {
+		r.mu.Lock()
+		r.services[service] = instances
+		r.mu.Unlock()
+		logger.Infof("[CONSUL REGISTRY] updated registry to %d instances for service (%s)", len(instances), service)
+	}
+
+	return
 }
 
 func (r *consulRegistry) writeChanges(oldInstances, newInstances []registry.Instance, ch chan<- registry.RegistryChange) bool {
