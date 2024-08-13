@@ -9,7 +9,10 @@ import (
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/moderntv/cadre/registry"
+	"google.golang.org/grpc/grpclog"
 )
+
+var logger = grpclog.Component("consul_registry")
 
 var _ registry.Registry = &consulRegistry{}
 
@@ -75,6 +78,7 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 	for {
 		catalog, _, err := r.client.Catalog().Service(service, "", q)
 		if err != nil {
+			logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", service, err)
 			continue
 		}
 
@@ -92,6 +96,7 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 			r.mu.Lock()
 			r.services[service] = instances
 			r.mu.Unlock()
+			logger.Infof("[CONSUL REGISTRY] updated registry to %d instances for service (%s)", len(instances), service)
 		}
 
 		select {
