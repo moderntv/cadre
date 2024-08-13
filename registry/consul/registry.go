@@ -38,6 +38,7 @@ func NewRegistry(address, datacenter string, aliases map[string]string, refreshP
 		datacenter:    datacenter,
 		refreshPeriod: refreshPeriod,
 		aliases:       aliases,
+		services:      make(map[string][]registry.Instance),
 	}
 	return r, nil
 }
