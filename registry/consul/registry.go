@@ -20,11 +20,12 @@ type consulRegistry struct {
 	client        *consul.Client
 	datacenter    string
 	refreshPeriod time.Duration
+	aliases       map[string]string
 	mu            sync.RWMutex
 	services      map[string][]registry.Instance
 }
 
-func NewRegistry(address, datacenter string, refreshPeriod time.Duration) (registry.Registry, error) {
+func NewRegistry(address, datacenter string, aliases map[string]string, refreshPeriod time.Duration) (registry.Registry, error) {
 	config := consul.DefaultConfig()
 	config.Address = address
 	c, err := consul.NewClient(config)
@@ -36,6 +37,7 @@ func NewRegistry(address, datacenter string, refreshPeriod time.Duration) (regis
 		client:        c,
 		datacenter:    datacenter,
 		refreshPeriod: refreshPeriod,
+		aliases:       aliases,
 	}
 	return r, nil
 }
@@ -76,9 +78,15 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 		Datacenter: r.datacenter,
 	}
 	for {
-		catalog, _, err := r.client.Catalog().Service(service, "", q)
+		name, ok := r.aliases[service]
+		if !ok {
+			name = service
+			logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
+		}
+
+		catalog, _, err := r.client.Catalog().Service(name, "", q)
 		if err != nil {
-			logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", service, err)
+			logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", name, err)
 			continue
 		}
 
