@@ -91,6 +91,10 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 			instances = append(instances, i)
 		}
 
+		if len(instances) == 0 {
+			logger.Warningf("[CONSUL REGISTRY] could not find any instances for service (%s)", service)
+		}
+
 		changed := r.writeChanges(r.services[service], instances, ch)
 		if changed {
 			r.mu.Lock()
