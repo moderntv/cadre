@@ -95,6 +95,7 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 		case <-ticker.C:
 
 		case <-ctx.Done():
+			logger.Infof("[CONSUL REGISTRY] canceled watch for service (%s)", service)
 			return
 		}
 	}
