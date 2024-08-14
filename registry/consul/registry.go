@@ -86,9 +86,11 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 		logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
 	}
 
+	logger.Infof("[CONSUL REGISTRY] watching changes for service (%s) every (%s)", service, r.refreshPeriod)
 	ticker := time.NewTicker(r.refreshPeriod)
 	for {
 		r.resolveService(service, consulService, ch)
+		logger.Infof("[CONSUL REGISTRY] checked changes for service (%s)", service)
 		select {
 		case <-ticker.C:
 
