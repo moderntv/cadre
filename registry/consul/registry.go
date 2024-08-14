@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var logger = grpclog.Component("consul_registry")
+var logger = grpclog.Component("[CONSUL REGISTRY]")
 
 var _ registry.Registry = &consulRegistry{}
 
@@ -78,24 +78,24 @@ func (r *consulRegistry) watch(ctx context.Context, service string, ch chan<- re
 	alias, ok := r.aliases[service]
 	if ok {
 		consulService = alias
-		logger.Infof("[CONSUL REGISTRY] using alias (%s) to resolve service (%s)", alias, service)
+		logger.Infof("using alias (%s) to resolve service (%s)", alias, service)
 	}
 
 	if !ok {
 		consulService = service
-		logger.Warningf("[CONSUL REGISTRY] no alias defined for service (%s)", service)
+		logger.Warningf("no alias defined for service (%s)", service)
 	}
 
-	logger.Infof("[CONSUL REGISTRY] watching changes for service (%s) every (%s)", service, r.refreshPeriod)
+	logger.Infof("watching changes for service (%s) every (%s)", service, r.refreshPeriod)
 	ticker := time.NewTicker(r.refreshPeriod)
 	for {
 		r.resolveService(service, consulService, ch)
-		logger.Infof("[CONSUL REGISTRY] checked changes for service (%s)", service)
+		logger.Infof("checked changes for service (%s)", service)
 		select {
 		case <-ticker.C:
 
 		case <-ctx.Done():
-			logger.Infof("[CONSUL REGISTRY] canceled watch for service (%s)", service)
+			logger.Infof("canceled watch for service (%s)", service)
 			return
 		}
 	}
@@ -108,7 +108,7 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 
 	catalog, _, err := r.client.Catalog().Service(consulService, "", q)
 	if err != nil {
-		logger.Errorf("[CONSUL REGISTRY] failed listing consul catalog for service (%s): %v", service, err)
+		logger.Errorf("failed listing consul catalog for service (%s): %v", service, err)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 	}
 
 	if len(instances) == 0 {
-		logger.Warningf("[CONSUL REGISTRY] could not find any instances for service (%s)", service)
+		logger.Warningf("could not find any instances for service (%s)", service)
 	}
 
 	r.writeChanges(service, instances, ch)
@@ -161,6 +161,6 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 
 	if changed {
 		r.services[service] = newInstances
-		logger.Infof("[CONSUL REGISTRY] updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
+		logger.Infof("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
 	}
 }
