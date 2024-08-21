@@ -1,6 +1,6 @@
 module github.com/moderntv/cadre/_examples
 
-go 1.16
+go 1.23
 
 require (
 	github.com/gin-gonic/gin v1.9.0
