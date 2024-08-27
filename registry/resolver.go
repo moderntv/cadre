@@ -57,9 +57,8 @@ func newResolver(target resolver.Target, registry Registry, cc resolver.ClientCo
 }
 
 func (rr *registryResolver) start() {
-	rr.updateAddressesFromRegistry()
-
 	c, stop := rr.registry.Watch(rr.service.Name())
+	rr.updateAddressesFromRegistry()
 	for {
 		select {
 		case <-c:
