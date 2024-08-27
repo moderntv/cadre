@@ -140,6 +140,7 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 }
 
 func (r *consulRegistry) writeChanges(service string, newInstances []registry.Instance, ch chan<- registry.RegistryChange) {
+	logger.Infof("writing changes for (%s)", service) // DEBUG
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	oldInstances := r.services[service]
@@ -174,5 +175,9 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 		r.services[service] = newInstances
 		logger.Infof("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
 		fmt.Printf("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service) // DEBUG
+	}
+
+	if !changed {
+		logger.Infof("no changes for (%s)", service) // DEBUG
 	}
 }
