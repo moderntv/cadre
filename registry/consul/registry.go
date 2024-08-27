@@ -114,14 +114,14 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 		Datacenter: r.datacenter,
 	}
 
-	logger.Errorf("pre health call for (%s)", service) // DEBUG
+	logger.Infof("pre health call for (%s)", service) // DEBUG
 	entries, _, err := r.client.Health().Service(consulService, "", true, q)
 	if err != nil {
 		logger.Errorf("failed listing consul health catalog for service (%s): %v", service, err)
 		return
 	}
 
-	logger.Errorf("post health call for (%s)", service) // DEBUG
+	logger.Infof("post health call for (%s)", service) // DEBUG
 	instances := make([]registry.Instance, 0, len(entries))
 	for _, entry := range entries {
 		i := instance{
