@@ -90,7 +90,7 @@ func (r *consulRegistry) watch(ctx context.Context, service string, changesCh ch
 
 	r.resolveService(service, consulService, changesCh)
 	logger.Infof("initialized registry for service (%s)", service)
-	fmt.Printf("initialized registry for service (%s)\n", service)
+	fmt.Printf("initialized registry for service (%s)\n", service) // DEBUG
 	initializedCh <- true
 
 	logger.Infof("watching changes for service (%s) every (%s)", service, r.refreshPeriod)
@@ -114,12 +114,14 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 		Datacenter: r.datacenter,
 	}
 
+	logger.Errorf("pre health call for (%s)", service) // DEBUG
 	entries, _, err := r.client.Health().Service(consulService, "", true, q)
 	if err != nil {
 		logger.Errorf("failed listing consul health catalog for service (%s): %v", service, err)
 		return
 	}
 
+	logger.Errorf("post health call for (%s)", service) // DEBUG
 	instances := make([]registry.Instance, 0, len(entries))
 	for _, entry := range entries {
 		i := instance{
@@ -131,7 +133,7 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 
 	if len(instances) == 0 {
 		logger.Warningf("could not find any instances for service (%s)", service)
-		fmt.Printf("could not find any instances for service (%s)", service)
+		fmt.Printf("could not find any instances for service (%s)", service) // DEBUG
 	}
 
 	r.writeChanges(service, instances, ch)
@@ -171,6 +173,6 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 	if changed {
 		r.services[service] = newInstances
 		logger.Infof("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
-		fmt.Printf("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
+		fmt.Printf("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service) // DEBUG
 	}
 }
