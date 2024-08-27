@@ -90,7 +90,6 @@ func (r *consulRegistry) watch(ctx context.Context, service string, changesCh ch
 
 	r.resolveService(service, consulService, changesCh)
 	logger.Infof("initialized registry for service (%s)", service)
-	fmt.Printf("initialized registry for service (%s)\n", service) // DEBUG
 	initializedCh <- true
 
 	logger.Infof("watching changes for service (%s) every (%s)", service, r.refreshPeriod)
@@ -100,7 +99,6 @@ func (r *consulRegistry) watch(ctx context.Context, service string, changesCh ch
 		case <-ticker.C:
 			r.resolveService(service, consulService, changesCh)
 			logger.Infof("checked changes for service (%s)", service)
-			fmt.Printf("checked changes for service (%s)", service)
 
 		case <-ctx.Done():
 			logger.Infof("canceled watch for service (%s)", service)
@@ -133,7 +131,6 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 
 	if len(instances) == 0 {
 		logger.Warningf("could not find any instances for service (%s)", service)
-		fmt.Printf("could not find any instances for service (%s)", service) // DEBUG
 	}
 
 	r.writeChanges(service, instances, ch)
@@ -180,7 +177,6 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 	if changed {
 		r.services[service] = newInstances
 		logger.Infof("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
-		fmt.Printf("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service) // DEBUG
 	}
 
 	if !changed {
