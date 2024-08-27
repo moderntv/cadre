@@ -17,12 +17,16 @@ var logger = grpclog.Component("consul_registry")
 var _ registry.Registry = &consulRegistry{}
 
 type consulRegistry struct {
-	client        *consul.Client
-	datacenter    string
+	client *consul.Client
+	// datacenter representc Consul datacenter.
+	datacenter string
+	// refreshPeriod determines period for Consul catalog API call.
 	refreshPeriod time.Duration
-	aliases       map[string]string
-	mu            sync.RWMutex
-	services      map[string][]registry.Instance
+	// aliases is used for mapping gRPC service name to Consul service name.
+	aliases map[string]string
+	mu      sync.RWMutex
+	// services maps service name to currently known service instances.
+	services map[string][]registry.Instance
 }
 
 func NewRegistry(address, datacenter string, aliases map[string]string, refreshPeriod time.Duration) (registry.Registry, error) {
