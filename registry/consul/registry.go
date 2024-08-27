@@ -159,6 +159,8 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 		}
 	}
 
+	logger.Infof("deregistered instances for (%s)", service) // DEBUG
+
 	for _, newInstance := range newInstances {
 		containsFunc := func(i registry.Instance) bool {
 			return i.Address() == newInstance.Address()
@@ -171,6 +173,8 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 			}
 		}
 	}
+
+	logger.Infof("registered instances for (%s)", service) // DEBUG
 
 	if changed {
 		r.services[service] = newInstances
