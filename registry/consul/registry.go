@@ -63,7 +63,14 @@ func (r *consulRegistry) Instances(service string) []registry.Instance {
 }
 
 func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
-	changesCh := make(chan registry.RegistryChange)
+	// FIX: The change propagation (i.e. the channel communication) has to be somehow reworked.
+	// I currently "resolved" the issue by using buffered channel.
+	// Please note that if any service has the "delta" of instances (number of changes processed by `writeChanges()`
+	// method) greater than the channel buffer size it will deadlock. This is caused by the resolver which calls
+	// the `Instances()` method for each change which tries to read-lock the registry mutex.
+	// This is problematic in conjunction with the locking in the `writeChanges()` method which writes to this channel
+	// under write lock.
+	changesCh := make(chan registry.RegistryChange, 512)
 	initializedCh := make(chan bool)
 	ctx, cancel := context.WithCancel(context.Background())
 	go r.watch(ctx, service, changesCh, initializedCh)
