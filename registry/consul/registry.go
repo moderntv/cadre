@@ -70,7 +70,7 @@ func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, 
 	// the `Instances()` method for each change which tries to read-lock the registry mutex.
 	// This is problematic in conjunction with the locking in the `writeChanges()` method which writes to this channel
 	// under write lock.
-	changesCh := make(chan registry.RegistryChange, 512)
+	changesCh := make(chan registry.RegistryChange, 1024)
 	initializedCh := make(chan bool)
 	ctx, cancel := context.WithCancel(context.Background())
 	go r.watch(ctx, service, changesCh, initializedCh)
