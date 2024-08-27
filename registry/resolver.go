@@ -64,7 +64,7 @@ func (rr *registryResolver) start() {
 		case <-c:
 			// TODO: implement some update instead of replacing the whole array?
 			if logger.V(3) {
-				logger.Infoln("[RESOLVER] got services update from registry")
+				logger.Infoln("got services update from registry")
 			}
 
 			rr.updateAddressesFromRegistry()
@@ -85,13 +85,13 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 	}
 
 	if logger.V(2) {
-		logger.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
+		logger.Infof("setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
 	}
 	err := rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})
 	if err != nil {
-		logger.Errorf("[RESOLVER] service (`%v`) connection update failed from registry: %v", rr.service.Name(), err)
+		logger.Errorf("service (`%v`) connection update failed from registry: %v", rr.service.Name(), err)
 		return
 	}
 }

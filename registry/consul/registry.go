@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var logger = grpclog.Component("[CONSUL REGISTRY]")
+var logger = grpclog.Component("consul_registry")
 
 var _ registry.Registry = &consulRegistry{}
 
