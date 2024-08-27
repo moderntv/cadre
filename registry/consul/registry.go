@@ -106,17 +106,17 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 		Datacenter: r.datacenter,
 	}
 
-	catalog, _, err := r.client.Catalog().Service(consulService, "", q)
+	entries, _, err := r.client.Health().Service(consulService, "", true, q)
 	if err != nil {
-		logger.Errorf("failed listing consul catalog for service (%s): %v", service, err)
+		logger.Errorf("failed listing consul health catalog for service (%s): %v", service, err)
 		return
 	}
 
-	instances := make([]registry.Instance, 0, len(catalog))
-	for _, s := range catalog {
+	instances := make([]registry.Instance, 0, len(entries))
+	for _, entry := range entries {
 		i := instance{
 			serviceName: service,
-			addr:        fmt.Sprintf("%s:%d", s.Node, s.ServicePort),
+			addr:        fmt.Sprintf("%s:%d", entry.Node.Address, entry.Service.Port),
 		}
 		instances = append(instances, i)
 	}
