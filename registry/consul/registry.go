@@ -105,7 +105,6 @@ func (r *consulRegistry) watch(ctx context.Context, service string, changesCh ch
 		select {
 		case <-ticker.C:
 			r.resolveService(service, consulService, changesCh)
-			logger.Infof("checked changes for service (%s)", service)
 
 		case <-ctx.Done():
 			logger.Infof("canceled watch for service (%s)", service)
@@ -174,10 +173,10 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 
 	if changed {
 		r.services[service] = newInstances
-		logger.Infof("updated registry intances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
+		logger.Infof("updated instances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
 	}
 
 	if !changed {
-		logger.Infof("no changes for (%s)", service)
+		logger.Infof("no instance changes for (%s)", service)
 	}
 }
