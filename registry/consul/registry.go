@@ -119,14 +119,12 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 		Datacenter: r.datacenter,
 	}
 
-	logger.Infof("pre health call for (%s)", service) // DEBUG
 	entries, _, err := r.client.Health().Service(consulService, "", true, q)
 	if err != nil {
 		logger.Errorf("failed listing consul health catalog for service (%s): %v", service, err)
 		return
 	}
 
-	logger.Infof("post health call for (%s)", service) // DEBUG
 	instances := make([]registry.Instance, 0, len(entries))
 	for _, entry := range entries {
 		i := instance{
@@ -144,12 +142,9 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 }
 
 func (r *consulRegistry) writeChanges(service string, newInstances []registry.Instance, ch chan<- registry.RegistryChange) {
-	logger.Infof("writing changes for (%s)", service) // DEBUG
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	oldInstances := r.services[service]
-	logger.Infof("old instances for (%s): %s", service, oldInstances) // DEBUG
-	logger.Infof("new instances for (%s): %s", service, newInstances) // DEBUG
 	changed := false
 	for _, oldInstance := range oldInstances {
 		containsFunc := func(i registry.Instance) bool {
@@ -164,8 +159,6 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 		}
 	}
 
-	logger.Infof("deregistered instances for (%s)", service) // DEBUG
-
 	for _, newInstance := range newInstances {
 		containsFunc := func(i registry.Instance) bool {
 			return i.Address() == newInstance.Address()
@@ -179,14 +172,12 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 		}
 	}
 
-	logger.Infof("registered instances for (%s)", service) // DEBUG
-
 	if changed {
 		r.services[service] = newInstances
-		logger.Infof("updated registry from %d to %d instances for service (%s)", len(oldInstances), len(newInstances), service)
+		logger.Infof("updated registry intances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
 	}
 
 	if !changed {
-		logger.Infof("no changes for (%s)", service) // DEBUG
+		logger.Infof("no changes for (%s)", service)
 	}
 }
