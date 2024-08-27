@@ -128,7 +128,7 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 	for _, entry := range entries {
 		i := instance{
 			serviceName: service,
-			addr:        fmt.Sprintf("%s:%d", entry.Node.Address, entry.Service.Port),
+			addr:        fmt.Sprintf("%s:%d", entry.Node.Node, entry.Service.Port),
 		}
 		instances = append(instances, i)
 	}
