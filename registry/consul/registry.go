@@ -18,14 +18,14 @@ var _ registry.Registry = &consulRegistry{}
 
 type consulRegistry struct {
 	client *consul.Client
-	// datacenter representc Consul datacenter.
+	// datacenter represents Consul datacenter.
 	datacenter string
 	// refreshPeriod determines period for Consul catalog API call.
 	refreshPeriod time.Duration
-	// aliases is used for mapping gRPC service name to Consul service name.
+	// aliases is used for mapping gRPC service names to Consul service names.
 	aliases map[string]string
 	mu      sync.RWMutex
-	// services maps service name to currently known service instances.
+	// services maps service names to currently known service instances.
 	services map[string][]registry.Instance
 }
 
