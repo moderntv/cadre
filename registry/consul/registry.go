@@ -143,6 +143,7 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 	logger.Infof("writing changes for (%s)", service) // DEBUG
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	logger.Infof("writing changes past mutex for (%s)", service) // DEBUG
 	oldInstances := r.services[service]
 	changed := false
 	for _, oldInstance := range oldInstances {
