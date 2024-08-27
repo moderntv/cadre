@@ -2,7 +2,6 @@ package registry
 
 import (
 	"context"
-	"time"
 
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
@@ -68,11 +67,10 @@ func (rr *registryResolver) start() {
 			}
 
 			rr.updateAddressesFromRegistry()
+
 		case <-rr.ctx.Done():
 			stop()
 			return
-		default:
-			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
