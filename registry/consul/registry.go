@@ -64,16 +64,18 @@ func (r *consulRegistry) Instances(service string) []registry.Instance {
 
 func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
 	changesCh := make(chan registry.RegistryChange)
+	initializedCh := make(chan bool)
 	ctx, cancel := context.WithCancel(context.Background())
-	go r.watch(ctx, service, changesCh)
+	go r.watch(ctx, service, changesCh, initializedCh)
 	closeFn := func() {
 		close(changesCh)
 		cancel()
 	}
+	<-initializedCh
 	return changesCh, closeFn
 }
 
-func (r *consulRegistry) watch(ctx context.Context, service string, changesCh chan<- registry.RegistryChange) {
+func (r *consulRegistry) watch(ctx context.Context, service string, changesCh chan<- registry.RegistryChange, initializedCh chan<- bool) {
 	var consulService string
 	alias, ok := r.aliases[service]
 	if ok {
@@ -86,13 +88,17 @@ func (r *consulRegistry) watch(ctx context.Context, service string, changesCh ch
 		logger.Warningf("no alias defined for service (%s)", service)
 	}
 
+	r.resolveService(service, consulService, changesCh)
+	logger.Infof("initialized registry for service (%s)", service)
+	initializedCh <- true
+
 	logger.Infof("watching changes for service (%s) every (%s)", service, r.refreshPeriod)
 	ticker := time.NewTicker(r.refreshPeriod)
 	for {
-		r.resolveService(service, consulService, changesCh)
-		logger.Infof("checked changes for service (%s)", service)
 		select {
 		case <-ticker.C:
+			r.resolveService(service, consulService, changesCh)
+			logger.Infof("checked changes for service (%s)", service)
 
 		case <-ctx.Done():
 			logger.Infof("canceled watch for service (%s)", service)
