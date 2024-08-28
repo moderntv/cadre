@@ -33,7 +33,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-// ServiceRegistrator takes care of registrating service into cadre gRPC.
+// ServiceRegistrator takes care of service registration into cadre gRPC.
 type ServiceRegistrator func(*grpc.Server)
 
 // Finisher is function type that handles the dealocation of cadre when particular signal is provided.
