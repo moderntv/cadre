@@ -62,7 +62,7 @@ func FromError(c *gin.Context, err error) {
 	InternalError(c, NewError(err))
 }
 
-// Ok returns given data and sets HTTP status to 200
+// Ok returns given data and sets HTTP status to 200.
 func Ok(c *gin.Context, data any) {
 	c.AbortWithStatusJSON(200, gin.H{
 		"data": data,

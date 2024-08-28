@@ -14,13 +14,13 @@ type Instance interface {
 type RegistryChangeType int
 
 const (
+	// Service registered to the service registry.
 	RCTRegistered RegistryChangeType = iota
+	// Service deregistered from the service registry.
 	RCTDeregistered
 )
 
 // RegistryChange represents single change on Instance while doing changes in registry.
-// We differentiate between RCTRegistered change, where instance is newly registered.
-// RCTDeregistered change is when instance dissapeared from registry.
 type RegistryChange struct {
 	Instance Instance
 	Type     RegistryChangeType
