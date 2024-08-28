@@ -2,7 +2,6 @@ package registry
 
 import (
 	"context"
-	"time"
 
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
@@ -57,23 +56,21 @@ func newResolver(target resolver.Target, registry Registry, cc resolver.ClientCo
 }
 
 func (rr *registryResolver) start() {
-	rr.updateAddressesFromRegistry()
-
 	c, stop := rr.registry.Watch(rr.service.Name())
+	rr.updateAddressesFromRegistry()
 	for {
 		select {
 		case <-c:
 			// TODO: implement some update instead of replacing the whole array?
 			if logger.V(3) {
-				logger.Infoln("[RESOLVER] got services update from registry")
+				logger.Infoln("got services update from registry")
 			}
 
 			rr.updateAddressesFromRegistry()
+
 		case <-rr.ctx.Done():
 			stop()
 			return
-		default:
-			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
@@ -86,13 +83,13 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 	}
 
 	if logger.V(2) {
-		logger.Infof("[RESOLVER] setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
+		logger.Infof("setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
 	}
 	err := rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})
 	if err != nil {
-		logger.Errorf("[RESOLVER] service (`%v`) connection update failed from registry: %v", rr.service.Name(), err)
+		logger.Errorf("service (`%v`) connection update failed from registry: %v", rr.service.Name(), err)
 		return
 	}
 }

@@ -55,6 +55,7 @@ linters-settings:
           - github.com/rantav/go-grpc-channelz
           - github.com/grpc-ecosystem/go-grpc-prometheus
           - github.com/spf13/viper
+          - github.com/hashicorp/consul/api
 
 output:
   sort-results: true
