@@ -92,9 +92,7 @@ func (r *consulRegistry) watch(ctx context.Context, service string, changesCh ch
 	if ok {
 		consulService = alias
 		logger.Infof("using alias (%s) to resolve service (%s)", alias, service)
-	}
-
-	if !ok {
+	} else {
 		consulService = service
 		logger.Warningf("no alias defined for service (%s)", service)
 	}
@@ -178,9 +176,7 @@ func (r *consulRegistry) writeChanges(service string, newInstances []registry.In
 	if changed {
 		r.services[service] = newInstances
 		logger.Infof("updated instances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
-	}
-
-	if !changed {
+	} else {
 		logger.Infof("no instance changes for (%s)", service)
 	}
 }
