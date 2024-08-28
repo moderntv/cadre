@@ -19,6 +19,8 @@ var (
 	ErrInvalidType         = errors.New("metric of invalid type found")
 )
 
+// Registry represents common registry that is created with prometheus.Registry and metrics that are
+// gathered using prometheus Collectors.
 type Registry struct {
 	namespace string
 
@@ -27,6 +29,8 @@ type Registry struct {
 	metrics map[string]prometheus.Collector
 }
 
+// NewRegistry registers new registry with given namespace and prometheusRegistry. When prometheusRegistry not provided, it creates new registry.
+// Default collectors for each go program are GoCollector (goroutines, version etc.) and ProcessCollector (CPU, VMEM, MEM).
 func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (registry *Registry, err error) {
 	if prometheusRegistry == nil {
 		prometheusRegistry = prometheus.NewRegistry()
@@ -52,6 +56,7 @@ func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (reg
 	return
 }
 
+// Register registrates new prometheus collector into registry.
 func (registry *Registry) Register(name string, c prometheus.Collector) (err error) {
 	if name == "" {
 		err = ErrNameEmpty
@@ -75,6 +80,7 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 	return
 }
 
+// RegisterOrGet registers new prometheus collector. When already exists, return the collector instead.
 func (registry *Registry) RegisterOrGet(name string, c prometheus.Collector) (cRegistered prometheus.Collector, err error) {
 	cRegistered, err = registry.Get(name)
 	if err == nil {
@@ -93,6 +99,7 @@ func (registry *Registry) RegisterOrGet(name string, c prometheus.Collector) (cR
 	return c, nil
 }
 
+// Unregister deregisters collector with given name.
 func (registry *Registry) Unregister(name string) (err error) {
 	c, ok := registry.metrics[name]
 	if !ok {
@@ -106,6 +113,7 @@ func (registry *Registry) Unregister(name string) (err error) {
 	return
 }
 
+// Get returns collector with given name.
 func (registry *Registry) Get(name string) (c prometheus.Collector, err error) {
 	var ok bool
 
@@ -117,12 +125,14 @@ func (registry *Registry) Get(name string) (c prometheus.Collector, err error) {
 	return
 }
 
+// HTTPHandler returns handler for prometheus registry.
 func (registry *Registry) HTTPHandler() http.Handler {
 	return promhttp.HandlerFor(registry.prometheusRegistry, promhttp.HandlerOpts{
 		Timeout: 1 * time.Second,
 	})
 }
 
+// GetPrometheusRegistry returns prometheus registry.
 func (registry *Registry) GetPrometheusRegistry() *prometheus.Registry {
 	return registry.prometheusRegistry
 }

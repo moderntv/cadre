@@ -4,18 +4,23 @@ type Service interface {
 	Name() string
 }
 
+// Instance describes single instance. The instance is unique by service is provides and address (IP:port).
 type Instance interface {
 	ServiceName() string
 	Address() string
 }
 
+// RegistryChangeType represents types of changes in registry.
 type RegistryChangeType int
 
 const (
+	// Service registered to the service registry.
 	RCTRegistered RegistryChangeType = iota
+	// Service deregistered from the service registry.
 	RCTDeregistered
 )
 
+// RegistryChange represents single change on Instance while doing changes in registry.
 type RegistryChange struct {
 	Instance Instance
 	Type     RegistryChangeType

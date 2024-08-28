@@ -127,6 +127,7 @@ func WithoutLogging() GRPCOption {
 	}
 }
 
+// WithLoggingOptions overrides default logging options of `grpc_zerolog` logger.
 func WithLoggingOptions(opts []grpc_zerolog.Option) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.loggingMiddlewareOptions = opts

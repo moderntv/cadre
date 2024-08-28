@@ -10,6 +10,7 @@ type grouper interface {
 	Group(path string, handlers ...gin.HandlerFunc) *gin.RouterGroup
 }
 
+// RoutingGroup serves for setting up HTTP routes under Base route.
 type RoutingGroup struct {
 	Base       string
 	Middleware []gin.HandlerFunc
@@ -18,6 +19,7 @@ type RoutingGroup struct {
 	Static     []StaticRoute
 }
 
+// StaticRoute serves for static route where static files are exposed under given Root path.
 type StaticRoute struct {
 	Path string
 	Root string

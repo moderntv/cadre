@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// HttpServer creates new server with gin router.
 type HttpServer struct {
 	name string
 	addr string
@@ -21,6 +22,7 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
 
+// NewHttpServer creates new HttpServer using gin router. Automatically registrates given middlewares and exposes also 404 NotFound route when accessing non existent handlers.
 func NewHttpServer(ctx context.Context, name, addr string, log zerolog.Logger, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
 	server = &HttpServer{
 		name: name,

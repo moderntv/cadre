@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// NewLogger instantiates new logger within HTTP middleware.
 func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
 	logger := baseLogger.With().Str("module", "http").Logger()
 

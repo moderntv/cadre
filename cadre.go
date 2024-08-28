@@ -17,6 +17,8 @@ import (
 	"google.golang.org/grpc/health"
 )
 
+// Cadre is interface that takes care of startup/start of servers.
+// Shutdown takes care of proper dealocation of servers.
 type Cadre interface {
 	Start() error
 	Shutdown() error
@@ -43,6 +45,9 @@ type cadre struct {
 	httpServers map[string]*stdhttp.Server
 }
 
+// Start starts blocking listening on HTTP or gRPC handlers.
+// When WithFinisher option provided the dealocation starts when signal is catched instead of manual dealocation call.
+// It is also possible to dealocate cadre using `WithContext` and `cancel` function on parent context.
 func (c *cadre) Start() (err error) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, c.handledSigs...)
@@ -102,8 +107,7 @@ func (c *cadre) shutdown() error {
 	return nil
 }
 
-// This function shutdown the Start function that is waiting for sigsDone.
-// The Start function initiates the context cancelation and waits.
+// Shutdown function shutdowns the Start function that is waiting for sigsDone or context Done.
 func (c *cadre) Shutdown() error {
 	c.finalizerDone <- true
 	close(c.finalizerDone)

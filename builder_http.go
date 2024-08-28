@@ -196,6 +196,7 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 	}
 }
 
+// WithoutLoggingMiddleware disables logging middleware for the HTTP handler.
 func WithoutLoggingMiddleware() HTTPOption {
 	return func(h *httpOptions) error {
 		h.enableLoggingMiddleware = false
@@ -203,6 +204,7 @@ func WithoutLoggingMiddleware() HTTPOption {
 	}
 }
 
+// WithoutMetricsMiddleware disables metrics middleware that gathers HTTP metrics such as request_us duration and request_total.
 func WithoutMetricsMiddleware() HTTPOption {
 	return func(h *httpOptions) error {
 		h.enableMetricsMiddleware = false

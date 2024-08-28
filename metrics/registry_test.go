@@ -5,46 +5,47 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/stretchr/testify/assert"
 )
 
-// DISABLED: deepequal cannot compare pointers
-// func TestNewRegistry(t *testing.T) {
-//     simplePrometheusRegistry := prometheus.NewRegistry()
-//     goCollector := prometheus.NewGoCollector()
-//     processCollector := prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{})
-//     simplePrometheusRegistry.MustRegister()
-//     simpleRegistry := &Registry{
-//         prometheusRegistry: simplePrometheusRegistry,
-//         metrics: map[string]prometheus.Collector{
-//             "go":      goCollector,
-//             "process": processCollector,
-//         },
-//     }
-//
-//     tests := []struct {
-//         name         string
-//         wantRegistry *Registry
-//         wantErr      bool
-//     }{
-//         {
-//             name:         "simple",
-//             wantRegistry: simpleRegistry,
-//             wantErr:      false,
-//         },
-//     }
-//     for _, tt := range tests {
-//         t.Run(tt.name, func(t *testing.T) {
-//             gotRegistry, err := NewRegistry()
-//             if (err != nil) != tt.wantErr {
-//                 t.Errorf("NewRegistry() error = %v, wantErr %v", err, tt.wantErr)
-//                 return
-//             }
-//             if !reflect.DeepEqual(gotRegistry, tt.wantRegistry) {
-//                 t.Errorf("NewRegistry() = %v, want %v", gotRegistry, tt.wantRegistry)
-//             }
-//         })
-//     }
-// }
+func TestNewRegistry(t *testing.T) {
+	simplePrometheusRegistry := prometheus.NewRegistry()
+	goCollector := collectors.NewGoCollector()
+	processCollector := collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})
+	simplePrometheusRegistry.MustRegister()
+	simpleRegistry := &Registry{
+		prometheusRegistry: simplePrometheusRegistry,
+		metrics: map[string]prometheus.Collector{
+			"go":      goCollector,
+			"process": processCollector,
+		},
+	}
+
+	tests := []struct {
+		name         string
+		wantRegistry *Registry
+		wantErr      bool
+	}{
+		{
+			name:         "simple",
+			wantRegistry: simpleRegistry,
+			wantErr:      false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRegistry, err := NewRegistry("", nil)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewRegistry() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for key, _ := range tt.wantRegistry.metrics {
+				assert.Equal(t, tt.wantRegistry.metrics[key], gotRegistry.metrics[key])
+			}
+		})
+	}
+}
 
 func TestRegistry_Register(t *testing.T) {
 	type fields struct {
