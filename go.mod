@@ -1,8 +1,6 @@
 module github.com/moderntv/cadre
 
-go 1.22.1
-
-toolchain go1.23.6
+go 1.23.6
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0
