@@ -21,6 +21,7 @@ type httpOptions struct {
 	enableLoggingMiddleware bool
 	enableMetricsMiddleware bool
 
+	routerOptions      []gin.OptionFunc
 	globalMiddleware   []gin.HandlerFunc
 	metricsAggregation bool
 	routingGroups      map[string]http.RoutingGroup
@@ -45,6 +46,7 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 		enableLoggingMiddleware: h.enableLoggingMiddleware,
 		enableMetricsMiddleware: h.enableMetricsMiddleware,
 
+		routerOptions:      append(h.routerOptions, other.routerOptions...),
 		globalMiddleware:   append(h.globalMiddleware, other.globalMiddleware...),
 		metricsAggregation: h.metricsAggregation,
 		routingGroups:      h.routingGroups,
@@ -60,7 +62,11 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 	return
 }
 
-func (h *httpOptions) build(cadreContext context.Context, logger zerolog.Logger, metricsRegistry *metrics.Registry) (httpServer *http.HttpServer, err error) {
+func (h *httpOptions) build(
+	cadreContext context.Context,
+	logger zerolog.Logger,
+	metricsRegistry *metrics.Registry,
+) (httpServer *http.HttpServer, err error) {
 	serverMiddlewares := []gin.HandlerFunc{}
 	{
 		if h.enableMetricsMiddleware {
@@ -81,7 +87,13 @@ func (h *httpOptions) build(cadreContext context.Context, logger zerolog.Logger,
 		serverMiddlewares = append(serverMiddlewares, h.globalMiddleware...)
 	}
 
-	httpServer, err = http.NewHttpServer(cadreContext, h.serverName, h.listeningAddress, logger, serverMiddlewares...)
+	httpServer, err = http.NewHttpServer(
+		cadreContext,
+		h.serverName,
+		h.listeningAddress,
+		logger,
+		h.routerOptions,
+		serverMiddlewares...)
 	if err != nil {
 		return
 	}
@@ -176,7 +188,7 @@ func WithRoute(method, path string, handlers ...gin.HandlerFunc) HTTPOption {
 }
 
 // WithRoutingGroup adds a new routing group to the HTTP server
-// may cause gin configuration eror at runtime. Use with care.
+// may cause gin configuration error at runtime. Use with care.
 func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 	return func(h *httpOptions) (err error) {
 		g, ok := h.routingGroups[group.Base]
@@ -196,6 +208,15 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 	}
 }
 
+// WithGinOptions sets Gin router options.
+func WithGinOptions(options []gin.OptionFunc) HTTPOption {
+	return func(h *httpOptions) (err error) {
+		h.routerOptions = append(h.routerOptions, options...)
+		return nil
+	}
+}
+
+// WithoutLoggingMiddleware disables logging middleware for the HTTP handler.
 func WithoutLoggingMiddleware() HTTPOption {
 	return func(h *httpOptions) error {
 		h.enableLoggingMiddleware = false
