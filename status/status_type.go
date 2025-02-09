@@ -14,8 +14,8 @@ const (
 	OK
 )
 
-func (s StatusType) String() string {
-	return toString[s]
+func (s *StatusType) String() string {
+	return toString[*s]
 }
 
 var toString = map[StatusType]string{
@@ -30,9 +30,9 @@ var toID = map[string]StatusType{
 	"ERROR": ERROR,
 }
 
-func (s StatusType) MarshalJSON() ([]byte, error) {
+func (s *StatusType) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(toString[s])
+	buffer.WriteString(toString[*s])
 	buffer.WriteString(`"`)
 	return buffer.Bytes(), nil
 }
