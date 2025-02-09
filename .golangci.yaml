@@ -15,8 +15,7 @@ linters:
     - wsl
     - nakedret
     # deprecated
-    - execinquery
-    - gomnd
+    - exportloopref
     # possibly enable in future
     - wrapcheck
     - ireturn
