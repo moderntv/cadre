@@ -34,11 +34,7 @@ func NewHttpServer(
 		addr: addr,
 		log:  log.With().Str("component", "http/"+name).Logger(),
 
-		router: gin.New(),
-	}
-
-	for _, optionFunc := range options {
-		optionFunc(server.router)
+		router: gin.New(options...),
 	}
 
 	server.router.Use(middlewares...)
