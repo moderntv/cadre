@@ -21,7 +21,14 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
 
-func NewHttpServer(ctx context.Context, name, addr string, log zerolog.Logger, middlewares ...gin.HandlerFunc) (server *HttpServer, err error) {
+// NewHttpServer creates new HttpServer using gin router. Automatically registrates given middlewares and exposes also 404 NotFound route when accessing non existent handlers.
+func NewHttpServer(
+	ctx context.Context,
+	name, addr string,
+	log zerolog.Logger,
+	options []gin.OptionFunc,
+	middlewares ...gin.HandlerFunc,
+) (server *HttpServer, err error) {
 	server = &HttpServer{
 		name: name,
 		addr: addr,
@@ -30,8 +37,11 @@ func NewHttpServer(ctx context.Context, name, addr string, log zerolog.Logger, m
 		router: gin.New(),
 	}
 
-	server.router.Use(middlewares...)
+	for _, optionFunc := range options {
+		optionFunc(server.router)
+	}
 
+	server.router.Use(middlewares...)
 	server.router.NoRoute(func(c *gin.Context) {
 		responses.NotFound(c, responses.Error{
 			Type:    "NO_ROUTE",
