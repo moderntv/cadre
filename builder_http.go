@@ -209,7 +209,7 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 }
 
 // WithGinOptions sets Gin router options.
-func WithGinOptions(options []gin.OptionFunc) HTTPOption {
+func WithGinOptions(options ...gin.OptionFunc) HTTPOption {
 	return func(h *httpOptions) (err error) {
 		h.routerOptions = append(h.routerOptions, options...)
 		return nil
