@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-type StatusType int
+type StatusType int //nolint: recvcheck
 
 const (
 	ERROR StatusType = iota
