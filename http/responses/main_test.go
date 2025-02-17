@@ -492,7 +492,7 @@ func TestInternalError(t *testing.T) {
 			httpTestShit: newHttpTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusInternalServerError,
-			wantBody:     `{"message":"An unexpected error has occured. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
+			wantBody:     `{"message":"An unexpected error has occurred. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
 		},
 	}
 	for _, tt := range tests {
