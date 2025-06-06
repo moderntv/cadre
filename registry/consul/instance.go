@@ -9,10 +9,10 @@ type instance struct {
 	addr        string `mapstructure:"addr"`
 }
 
-func (this instance) ServiceName() string {
-	return this.serviceName
+func (i instance) ServiceName() string {
+	return i.serviceName
 }
 
-func (this instance) Address() string {
-	return this.addr
+func (i instance) Address() string {
+	return i.addr
 }

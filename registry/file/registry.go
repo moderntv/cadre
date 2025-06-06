@@ -85,15 +85,62 @@ func NewRegistry(filePath string, opts ...option) (registry.Registry, error) {
 	return &r, r.loadInstancesFromViper()
 }
 
-func (this *fileRegistry) loadInstancesFromViper() error {
+func (fr *fileRegistry) Register(serviceInstance registry.Instance) error {
+	panic("not implemented")
+	// this.sLock.Lock()
+	// defer this.sLock.Unlock()
+	// return nil
+}
+
+func (fr *fileRegistry) Deregister(serviceInstance registry.Instance) error {
+	panic("not implemented")
+	// this.sLock.Lock()
+	// defer this.sLock.Unlock()
+	// return nil
+}
+
+func (fr *fileRegistry) Instances(service string) []registry.Instance {
+	fr.sLock.RLock()
+	defer fr.sLock.RUnlock()
+
+	is, ok := fr.services[service]
+	if !ok {
+		return []registry.Instance{}
+	}
+	return is
+}
+
+func (fr *fileRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
+	fr.wLock.Lock()
+	defer fr.wLock.Unlock()
+
+	c := make(chan registry.RegistryChange)
+	if _, ok := fr.watchers[service]; !ok {
+		fr.watchers[service] = []chan registry.RegistryChange{}
+	}
+	p := len(fr.watchers[service])
+	fr.watchers[service] = append(fr.watchers[service], c)
+	f := func() {
+		fr.wLock.Lock()
+		defer fr.wLock.Unlock()
+
+		fr.watchers[service] = append(fr.watchers[service][:p], fr.watchers[service][p+1:]...)
+
+		close(c)
+	}
+
+	return c, f
+}
+
+func (fr *fileRegistry) loadInstancesFromViper() error {
 	changes := []registry.RegistryChange{}
 
 	rawRegistryData := map[string][]string{}
-	if err := this.v.Unmarshal(&rawRegistryData); err != nil {
+	if err := fr.v.Unmarshal(&rawRegistryData); err != nil {
 		return err
 	}
 
-	this.sLock.RLock()
+	fr.sLock.RLock()
 	newServices := servicesMap{}
 	newInstances := map[string]map[string]struct{}{}
 	for service, addrs := range rawRegistryData {
@@ -109,8 +156,8 @@ func (this *fileRegistry) loadInstancesFromViper() error {
 			newInstances[service][addr] = struct{}{}
 
 			// detect newly registered instances
-			if _, ok := this.instances[service]; ok {
-				if _, ok := this.instances[service][addr]; !ok {
+			if _, ok := fr.instances[service]; ok {
+				if _, ok := fr.instances[service][addr]; !ok {
 					changes = append(changes, registry.RegistryChange{
 						Instance: i,
 						Type:     registry.RCTRegistered,
@@ -125,10 +172,10 @@ func (this *fileRegistry) loadInstancesFromViper() error {
 		}
 	}
 	// detect deregistered instances
-	for serviceName := range this.instances {
+	for serviceName := range fr.instances {
 		if _, ok := newInstances[serviceName]; ok {
 			// service exists in both new and old instances
-			for _, instance := range this.services[serviceName] {
+			for _, instance := range fr.services[serviceName] {
 				if _, ok := newInstances[instance.Address()]; !ok {
 					// instance doesn't exist in new instances
 					changes = append(changes, registry.RegistryChange{
@@ -139,7 +186,7 @@ func (this *fileRegistry) loadInstancesFromViper() error {
 			}
 		} else {
 			// service doesn't exist anymore => send deregistered change for all instances
-			for _, oldInstance := range this.services[serviceName] {
+			for _, oldInstance := range fr.services[serviceName] {
 				changes = append(changes, registry.RegistryChange{
 					Instance: oldInstance,
 					Type:     registry.RCTDeregistered,
@@ -147,71 +194,24 @@ func (this *fileRegistry) loadInstancesFromViper() error {
 			}
 		}
 	}
-	this.sLock.RUnlock()
+	fr.sLock.RUnlock()
 
-	this.sLock.Lock()
-	this.services = newServices
-	this.instances = newInstances
-	this.sLock.Unlock()
+	fr.sLock.Lock()
+	fr.services = newServices
+	fr.instances = newInstances
+	fr.sLock.Unlock()
 
-	this.wLock.RLock()
+	fr.wLock.RLock()
 	for _, change := range changes {
 		service := change.Instance.ServiceName()
-		serviceWatchers, ok := this.watchers[service]
+		serviceWatchers, ok := fr.watchers[service]
 		if ok {
 			for _, watcher := range serviceWatchers {
 				watcher <- change
 			}
 		}
 	}
-	this.wLock.RUnlock()
+	fr.wLock.RUnlock()
 
 	return nil
-}
-
-func (this *fileRegistry) Register(serviceInstance registry.Instance) error {
-	panic("not implemented")
-	// this.sLock.Lock()
-	// defer this.sLock.Unlock()
-	// return nil
-}
-
-func (this *fileRegistry) Deregister(serviceInstance registry.Instance) error {
-	panic("not implemented")
-	// this.sLock.Lock()
-	// defer this.sLock.Unlock()
-	// return nil
-}
-
-func (this *fileRegistry) Instances(service string) []registry.Instance {
-	this.sLock.RLock()
-	defer this.sLock.RUnlock()
-
-	is, ok := this.services[service]
-	if !ok {
-		return []registry.Instance{}
-	}
-	return is
-}
-
-func (this *fileRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
-	this.wLock.Lock()
-	defer this.wLock.Unlock()
-
-	c := make(chan registry.RegistryChange)
-	if _, ok := this.watchers[service]; !ok {
-		this.watchers[service] = []chan registry.RegistryChange{}
-	}
-	p := len(this.watchers[service])
-	this.watchers[service] = append(this.watchers[service], c)
-	f := func() {
-		this.wLock.Lock()
-		defer this.wLock.Unlock()
-
-		this.watchers[service] = append(this.watchers[service][:p], this.watchers[service][p+1:]...)
-
-		close(c)
-	}
-
-	return c, f
 }

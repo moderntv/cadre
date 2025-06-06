@@ -22,27 +22,27 @@ func NewRegistry(cfg map[string][]string) (registry.Registry, error) {
 	return &r, nil
 }
 
-func (this *staticRegistry) Register(serviceInstance registry.Instance) error {
+func (sr *staticRegistry) Register(serviceInstance registry.Instance) error {
 	return nil
 }
 
-func (this *staticRegistry) Deregister(serviceInstance registry.Instance) error {
+func (sr *staticRegistry) Deregister(serviceInstance registry.Instance) error {
 	return nil
 }
 
-func (this *staticRegistry) Instances(service string) []registry.Instance {
-	if this == nil {
+func (sr *staticRegistry) Instances(service string) []registry.Instance {
+	if sr == nil {
 		return []registry.Instance{}
 	}
 
-	is, ok := (*this)[service]
+	is, ok := (*sr)[service]
 	if !ok {
 		return []registry.Instance{}
 	}
 	return is
 }
 
-func (this *staticRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
+func (sr *staticRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
 	c := make(chan registry.RegistryChange)
 	f := func() {
 		close(c)
