@@ -9,8 +9,8 @@ bin
 # Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Outputs of the go coverage tool, static analysis etc.
+*.out*
 
 # Go workspace file
 go.work
