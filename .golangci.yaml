@@ -1,9 +1,11 @@
+---
+version: "2"
+
 run:
-  timeout: 3m
-  tests: false
+  tests: true
 
 linters:
-  enable-all: true
+  default: all
   disable:
     # restrictive
     - exhaustruct
@@ -14,52 +16,76 @@ linters:
     - gochecknoglobals
     - wsl
     - nakedret
-    # deprecated
-    - exportloopref
-    # possibly enable in future
-    - wrapcheck
-    - ireturn
     - err113
-    - unused
-    - tagliatelle
-    - revive
-    - forcetypeassert
-    - mnd
-    - stylecheck
-    - lll
-    - gochecknoinits
-    - containedctx
-    - gocognit
+    # enable later
+    - wrapcheck
     - godox
+    - mnd
+    - unused
+    - revive
+    - testpackage
+    - paralleltest
+    - promlinter
+    - lll
+    - ireturn
+    - gocognit
     - cyclop
+    - gochecknoinits
+    - forcetypeassert
     - nilerr
+    - dupl
+    - containedctx
+  settings:
+    depguard:
+      rules:
+        main:
+          list-mode: strict
+          files:
+            - $all
+          allow:
+            - $gostd
+            - golang.org/x/net
+            - git.moderntv.eu
+            - github.com/moderntv
+            - github.com/rs/zerolog
+            - github.com/gin-gonic/gin
+            - gopkg.in/yaml.v2
+            - github.com/spf13/viper
+            - github.com/prometheus/client_golang
+            - github.com/grpc-ecosystem/go-grpc-prometheus
+            - github.com/rantav/go-grpc-channelz
+            - github.com/rkollar/go-grpc-middleware
+            - google.golang.org/grpc
+            - github.com/fsnotify/fsnotify
+            - github.com/cespare/xxhash
+            - github.com/hashicorp/consul
 
-linters-settings:
-  depguard:
-    rules:
-      main:
-        list-mode: strict
-        files:
-           - $all
-        allow:
-          - $gostd
-          - github.com/rkollar/go-grpc-middleware
-          - github.com/moderntv/cadre
-          - github.com/prometheus/client_golang
-          - github.com/gin-gonic/gin
-          - github.com/cespare/xxhash/v2
-          - github.com/fsnotify/fsnotify
-          - github.com/rs/zerolog
-          - github.com/moderntv/hashring
-          - github.com/rantav/go-grpc-channelz
-          - github.com/grpc-ecosystem/go-grpc-prometheus
-          - github.com/spf13/viper
-          - github.com/hashicorp/consul/api
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+  settings:
+    golines:
+      max-len: 120
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+issues:
+  fix: true
 
 output:
-  sort-results: true
   formats:
-    - format: colored-line-number
+    text:
       path: stdout
-    - format: tab
+    tab:
       path: golangci-lint.out
+      colors: false
+    html:
+      path: golangci-lint.out.html
