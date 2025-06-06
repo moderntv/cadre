@@ -23,7 +23,8 @@ func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
 		dumplogger := logger.With().
 			Str("method", c.Request.Method).
 			Str("path", path).
-			Dur("latency", latency).              // keep this for log aggregation, where number is better than user-readable string
+			Dur("latency", latency).
+			// keep this for log aggregation, where number is better than user-readable string
 			Str("latency_str", latency.String()). // user-readable latency
 			Int("status_code", c.Writer.Status()).
 			Str("ip", c.ClientIP()).Logger()

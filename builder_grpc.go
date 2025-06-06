@@ -55,11 +55,15 @@ func defaultGRPCOptions() *grpcOptions {
 
 func (g *grpcOptions) ensure() (err error) {
 	if g.listeningAddress == "" && !g.multiplexWithHTTP {
-		err = errors.New("grpc server has to either have listening address or be set up to be multiplexed with http server")
+		err = errors.New(
+			"grpc server has to either have listening address or be set up to be multiplexed with http server",
+		)
 		return
 	}
 	if g.listeningAddress != "" && g.multiplexWithHTTP {
-		err = errors.New("grpc can be either configured with a standalone listening address or to be multiplexed with other grpc")
+		err = errors.New(
+			"grpc can be either configured with a standalone listening address or to be multiplexed with other grpc",
+		)
 		return
 	}
 

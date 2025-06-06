@@ -75,7 +75,10 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 	return
 }
 
-func (registry *Registry) RegisterOrGet(name string, c prometheus.Collector) (cRegistered prometheus.Collector, err error) {
+func (registry *Registry) RegisterOrGet(
+	name string,
+	c prometheus.Collector,
+) (cRegistered prometheus.Collector, err error) {
 	cRegistered, err = registry.Get(name)
 	if err == nil {
 		return
@@ -100,7 +103,9 @@ func (registry *Registry) Unregister(name string) (err error) {
 		return
 	}
 
-	registry.prometheusRegistry.Unregister(c) // ignore return value - it only tells us the collector doesn't exist in prometheus registry
+	registry.prometheusRegistry.Unregister(
+		c,
+	) // ignore return value - it only tells us the collector doesn't exist in prometheus registry
 	delete(registry.metrics, name)
 
 	return

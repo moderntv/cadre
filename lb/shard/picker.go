@@ -17,7 +17,11 @@ type shardPicker struct {
 	shardKeyFn func(context.Context) string
 }
 
-func newShardPicker(ring *hashring.Ring, addr2sc map[string]balancer.SubConn, shardKeyFunc func(context.Context) string) balancer.Picker {
+func newShardPicker(
+	ring *hashring.Ring,
+	addr2sc map[string]balancer.SubConn,
+	shardKeyFunc func(context.Context) string,
+) balancer.Picker {
 	return &shardPicker{
 		ring:       ring,
 		addr2sc:    addr2sc,

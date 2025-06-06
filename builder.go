@@ -121,10 +121,17 @@ func (b *Builder) Build() (c *cadre, err error) {
 
 	// extra http services init
 	if b.metricsHTTPServerAddr != "" {
-		err = WithHTTP("metrics_http",
+		err = WithHTTP(
+			"metrics_http",
 			WithHTTPListeningAddress(b.metricsHTTPServerAddr),
-			WithRoute("GET", b.metricsPath, gin.WrapH(promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{}))),
-		)(b)
+			WithRoute(
+				"GET",
+				b.metricsPath,
+				gin.WrapH(promhttp.HandlerFor(b.prometheusRegistry, promhttp.HandlerOpts{})),
+			),
+		)(
+			b,
+		)
 		if err != nil {
 			err = fmt.Errorf("adding metrics http server failed: %w", err)
 			return
@@ -198,7 +205,12 @@ func (b *Builder) Build() (c *cadre, err error) {
 		// http+grpc multiplexing
 		if b.grpcOptions != nil && b.grpcOptions.listeningAddress == addr {
 			h = stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-				log.Printf("handling http request. protomajor = %v; content-type = %v; headers = %v", r.ProtoMajor, r.Header.Get("Content-Type"), r.Header)
+				log.Printf(
+					"handling http request. protomajor = %v; content-type = %v; headers = %v",
+					r.ProtoMajor,
+					r.Header.Get("Content-Type"),
+					r.Header,
+				)
 				if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
 					c.grpcServer.ServeHTTP(w, r)
 				} else {
@@ -290,12 +302,16 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	if b.grpcOptions.enableLoggingMiddleware {
 		unaryInterceptors = append(
 			unaryInterceptors,
-			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+			grpc_ctxtags.UnaryServerInterceptor(
+				grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor),
+			),
 			grpc_zerolog.UnaryServerInterceptor(b.logger, b.grpcOptions.loggingMiddlewareOptions...),
 		)
 		streamInterceptors = append(
 			streamInterceptors,
-			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+			grpc_ctxtags.StreamServerInterceptor(
+				grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor),
+			),
 			grpc_zerolog.StreamServerInterceptor(b.logger, b.grpcOptions.loggingMiddlewareOptions...),
 		)
 	}
@@ -311,8 +327,14 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 
 	// recovery middleware
 	if b.grpcOptions.enableRecoveryMiddleware {
-		unaryInterceptors = append(unaryInterceptors, grpc_recovery.UnaryServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...))
-		streamInterceptors = append(streamInterceptors, grpc_recovery.StreamServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...))
+		unaryInterceptors = append(
+			unaryInterceptors,
+			grpc_recovery.UnaryServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...),
+		)
+		streamInterceptors = append(
+			streamInterceptors,
+			grpc_recovery.StreamServerInterceptor(b.grpcOptions.recoveryMiddlewareOptions...),
+		)
 	}
 
 	// create grpc server
@@ -354,7 +376,10 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 	return
 }
 
-func (b *Builder) buildHTTP(_ *cadre, cadreContext context.Context) (httpServers map[string]*http.HttpServer, err error) {
+func (b *Builder) buildHTTP(
+	_ *cadre,
+	cadreContext context.Context,
+) (httpServers map[string]*http.HttpServer, err error) {
 	httpServers = map[string]*http.HttpServer{}
 
 	mergedHTTPOptions := map[string]*httpOptions{}
