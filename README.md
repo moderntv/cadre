@@ -1,18 +1,19 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/moderntv/cadre)](https://goreportcard.com/report/github.com/moderntv/cadre)
 ![Go Version](https://img.shields.io/github/go-mod/go-version/moderntv/cadre)
-![Lint Workflow Status](https://github.com/moderntv/cadre/actions/workflows/golangci-lint.yml/badge.svg?branch=master)
+![Lint Workflow Status](https://github.com/moderntv/cadre/actions/workflows/ci.yml/badge.svg?branch=master)
 
 # Cadre
 
-Cadre is a strongly opinionated library intended to removed boilerplate code from a modern Go application supporting gRPC and HTTP. 
+Cadre is a strongly opinionated library intended to removed boilerplate code from a modern Go application supporting gRPC and HTTP.
 It has been build for internal projects needs at [ModernTV](https://www.moderntv.eu).
 
-Cadre makes it easy to create and application with gRPC and/or HTTP interface. 
+Cadre makes it easy to create and application with gRPC and/or HTTP interface.
 It provides prometheus metrics and application status endpoints, debugging tools, logging and various gRPC utils.
 
 Cadre tries to be flexible but enforces several libraries:
-* logging - [zerolog](https://github.com/rs/zerolog)
-* http server - [gin](https://github.com/gin-gonic/gin)
+
+- logging - [zerolog](https://github.com/rs/zerolog)
+- http server - [gin](https://github.com/gin-gonic/gin)
 
 See `_examples` folder for usage details.
 
