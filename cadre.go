@@ -94,14 +94,6 @@ func (c *cadre) Start() (err error) {
 	return
 }
 
-// shutdown the context and waits for WaitGroup of goroutines.
-func (c *cadre) shutdown() error {
-	c.ctxCancel()
-	c.swg.Wait()
-
-	return nil
-}
-
 // This function shutdown the Start function that is waiting for sigsDone.
 // The Start function initiates the context cancelation and waits.
 func (c *cadre) Shutdown() error {
@@ -183,4 +175,12 @@ func (c *cadre) startGRPC() {
 			Err(err).
 			Msg("grpc server failed")
 	}
+}
+
+// shutdown the context and waits for WaitGroup of goroutines.
+func (c *cadre) shutdown() error {
+	c.ctxCancel()
+	c.swg.Wait()
+
+	return nil
 }

@@ -59,6 +59,14 @@ func newResolver(target resolver.Target, registry Registry, cc resolver.ClientCo
 	return
 }
 
+func (rr *registryResolver) ResolveNow(o resolver.ResolveNowOptions) {
+	rr.updateAddressesFromRegistry()
+}
+
+func (rr *registryResolver) Close() {
+	rr.ctxCancel()
+}
+
 func (rr *registryResolver) start() {
 	c, stop := rr.registry.Watch(rr.service.Name())
 	rr.updateAddressesFromRegistry()
@@ -101,12 +109,4 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 		logger.Errorf("service (`%v`) connection update failed from registry: %v", rr.service.Name(), err)
 		return
 	}
-}
-
-func (rr *registryResolver) ResolveNow(o resolver.ResolveNowOptions) {
-	rr.updateAddressesFromRegistry()
-}
-
-func (rr *registryResolver) Close() {
-	rr.ctxCancel()
 }

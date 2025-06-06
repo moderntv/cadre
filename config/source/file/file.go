@@ -37,7 +37,10 @@ func (fs *FileSource) Read() (d []byte, err error) {
 	if err != nil {
 		return
 	}
-	defer h.Close()
+
+	defer func() {
+		_ = h.Close()
+	}()
 
 	d, err = io.ReadAll(h)
 	if err != nil {

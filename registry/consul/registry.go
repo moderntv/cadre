@@ -51,18 +51,18 @@ func NewRegistry(
 	return r, nil
 }
 
-func (r *consulRegistry) Register(serviceInstance registry.Instance) error {
+func (cr *consulRegistry) Register(serviceInstance registry.Instance) error {
 	return nil
 }
 
-func (r *consulRegistry) Deregister(serviceInstance registry.Instance) error {
+func (cr *consulRegistry) Deregister(serviceInstance registry.Instance) error {
 	return nil
 }
 
-func (r *consulRegistry) Instances(service string) []registry.Instance {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	is, ok := r.services[service]
+func (cr *consulRegistry) Instances(service string) []registry.Instance {
+	cr.mu.RLock()
+	defer cr.mu.RUnlock()
+	is, ok := cr.services[service]
 	if !ok {
 		return []registry.Instance{}
 	}
@@ -70,7 +70,7 @@ func (r *consulRegistry) Instances(service string) []registry.Instance {
 	return is
 }
 
-func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
+func (cr *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, func()) {
 	// FIX: The change propagation (i.e. the channel communication) has to be somehow reworked.
 	// I currently "resolved" the issue by using buffered channel.
 	// Please note that if any service has the "delta" of instances (number of changes processed by `writeChanges()`
@@ -81,7 +81,7 @@ func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, 
 	changesCh := make(chan registry.RegistryChange, 1024)
 	initializedCh := make(chan bool)
 	ctx, cancel := context.WithCancel(context.Background())
-	go r.watch(ctx, service, changesCh, initializedCh)
+	go cr.watch(ctx, service, changesCh, initializedCh)
 	closeFn := func() {
 		close(changesCh)
 		cancel()
@@ -90,14 +90,14 @@ func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, 
 	return changesCh, closeFn
 }
 
-func (r *consulRegistry) watch(
+func (cr *consulRegistry) watch(
 	ctx context.Context,
 	service string,
 	changesCh chan<- registry.RegistryChange,
 	initializedCh chan<- bool,
 ) {
 	var consulService string
-	alias, ok := r.aliases[service]
+	alias, ok := cr.aliases[service]
 	if ok {
 		consulService = alias
 		logger.Infof("using alias (%s) to resolve service (%s)", alias, service)
@@ -106,16 +106,16 @@ func (r *consulRegistry) watch(
 		logger.Warningf("no alias defined for service (%s)", service)
 	}
 
-	r.resolveService(service, consulService, changesCh)
+	cr.resolveService(service, consulService, changesCh)
 	logger.Infof("initialized registry for service (%s)", service)
 	initializedCh <- true
 
-	logger.Infof("watching changes for service (%s) every (%s)", service, r.refreshPeriod)
-	ticker := time.NewTicker(r.refreshPeriod)
+	logger.Infof("watching changes for service (%s) every (%s)", service, cr.refreshPeriod)
+	ticker := time.NewTicker(cr.refreshPeriod)
 	for {
 		select {
 		case <-ticker.C:
-			r.resolveService(service, consulService, changesCh)
+			cr.resolveService(service, consulService, changesCh)
 
 		case <-ctx.Done():
 			logger.Infof("canceled watch for service (%s)", service)
@@ -124,12 +124,12 @@ func (r *consulRegistry) watch(
 	}
 }
 
-func (r *consulRegistry) resolveService(service, consulService string, ch chan<- registry.RegistryChange) {
+func (cr *consulRegistry) resolveService(service, consulService string, ch chan<- registry.RegistryChange) {
 	q := &consul.QueryOptions{
-		Datacenter: r.datacenter,
+		Datacenter: cr.datacenter,
 	}
 
-	entries, _, err := r.client.Health().Service(consulService, "", true, q)
+	entries, _, err := cr.client.Health().Service(consulService, "", true, q)
 	if err != nil {
 		logger.Errorf("failed listing consul health catalog for service (%s): %v", service, err)
 		return
@@ -148,17 +148,17 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 		logger.Warningf("could not find any instances for service (%s)", service)
 	}
 
-	r.writeChanges(service, instances, ch)
+	cr.writeChanges(service, instances, ch)
 }
 
-func (r *consulRegistry) writeChanges(
+func (cr *consulRegistry) writeChanges(
 	service string,
 	newInstances []registry.Instance,
 	ch chan<- registry.RegistryChange,
 ) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	oldInstances := r.services[service]
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
+	oldInstances := cr.services[service]
 	changed := false
 	for _, oldInstance := range oldInstances {
 		containsFunc := func(i registry.Instance) bool {
@@ -187,7 +187,7 @@ func (r *consulRegistry) writeChanges(
 	}
 
 	if changed {
-		r.services[service] = newInstances
+		cr.services[service] = newInstances
 		logger.Infof("updated instances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
 	} else {
 		logger.Infof("no instance changes for (%s)", service)

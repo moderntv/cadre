@@ -10,7 +10,7 @@ import (
 type ComponentReport struct {
 	Status    StatusType `json:"status"`
 	Message   string     `json:"message,omitempty"`
-	UpdatedAt time.Time  `json:"updated_at,omitempty"`
+	UpdatedAt time.Time  `json:"updated_at,omitempty"` //nolint: tagliatelle
 }
 type Report struct {
 	Version    string                     `json:"version"`

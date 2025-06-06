@@ -66,5 +66,5 @@ func (w *watcher) C() chan source.ConfigChange {
 }
 
 func (w *watcher) Stop() {
-	w.fsnw.Close()
+	_ = w.fsnw.Close()
 }

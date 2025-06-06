@@ -33,12 +33,19 @@ type service struct {
 	name string
 }
 
-func (this *service) Name() string { return this.name }
+func (s *service) Name() string {
+	return s.name
+}
 
 type instance struct {
 	serviceName string
 	address     string
 }
 
-func (this *instance) getServiceName() string { return this.serviceName }
-func (this *instance) getAddress() string     { return this.address }
+func (i *instance) getServiceName() string {
+	return i.serviceName
+}
+
+func (i *instance) getAddress() string {
+	return i.address
+}
