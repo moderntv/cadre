@@ -2,55 +2,55 @@
 name: CI
 
 on:
-    push:
-    pull_request:
+  push:
+  pull_request:
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    lint:
-        name: Lint
-        runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Go
-              uses: actions/setup-go@v5
-              with:
-                go-version: '1.23.x'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
 
-            - name: Lint
-              run: make lint
+      - name: Lint
+        run: make lint
 
-            - name: Upload lint artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: golangci-lint.out
-                path: golangci-lint.out
-                retention-days: 7
+      - name: Upload lint artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: golangci-lint.out
+          path: golangci-lint.out
+          retention-days: 7
 
-    test:
-        name: Test
-        runs-on: ubuntu-latest
+  test:
+    name: Test
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Go
-              uses: actions/setup-go@v5
-              with:
-                go-version: '1.23.x'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
 
-            - name: Test
-              run: make test
+      - name: Test
+        run: make test
 
-            - name: Upload coverage artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: cp.out
-                path: cp.out
-                retention-days: 7
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp.out
+          path: cp.out
+          retention-days: 7
