@@ -69,7 +69,11 @@ func TestStatus_Register(t *testing.T) {
 
 			_, ok := tt.status.components[tt.service]
 			if !ok {
-				t.Errorf("Register() has not registered service `%s`. components = %v", tt.service, tt.status.components)
+				t.Errorf(
+					"Register() has not registered service `%s`. components = %v",
+					tt.service,
+					tt.status.components,
+				)
 			}
 		})
 	}

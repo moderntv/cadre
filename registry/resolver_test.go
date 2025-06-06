@@ -69,7 +69,7 @@ func Test_resolverBuilder_Build(t *testing.T) {
 	}
 }
 
-// implement clientconn for tests
+// implement clientconn for tests.
 type clientConn struct{}
 
 // UpdateState updates the state of the ClientConn appropriately.

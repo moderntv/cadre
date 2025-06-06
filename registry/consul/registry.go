@@ -29,7 +29,11 @@ type consulRegistry struct {
 	services map[string][]registry.Instance
 }
 
-func NewRegistry(address, datacenter string, aliases map[string]string, refreshPeriod time.Duration) (registry.Registry, error) {
+func NewRegistry(
+	address, datacenter string,
+	aliases map[string]string,
+	refreshPeriod time.Duration,
+) (registry.Registry, error) {
 	config := consul.DefaultConfig()
 	config.Address = address
 	c, err := consul.NewClient(config)
@@ -86,7 +90,12 @@ func (r *consulRegistry) Watch(service string) (<-chan registry.RegistryChange, 
 	return changesCh, closeFn
 }
 
-func (r *consulRegistry) watch(ctx context.Context, service string, changesCh chan<- registry.RegistryChange, initializedCh chan<- bool) {
+func (r *consulRegistry) watch(
+	ctx context.Context,
+	service string,
+	changesCh chan<- registry.RegistryChange,
+	initializedCh chan<- bool,
+) {
 	var consulService string
 	alias, ok := r.aliases[service]
 	if ok {
@@ -142,7 +151,11 @@ func (r *consulRegistry) resolveService(service, consulService string, ch chan<-
 	r.writeChanges(service, instances, ch)
 }
 
-func (r *consulRegistry) writeChanges(service string, newInstances []registry.Instance, ch chan<- registry.RegistryChange) {
+func (r *consulRegistry) writeChanges(
+	service string,
+	newInstances []registry.Instance,
+	ch chan<- registry.RegistryChange,
+) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	oldInstances := r.services[service]

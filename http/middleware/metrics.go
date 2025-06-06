@@ -10,14 +10,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func NewMetrics(r *metrics.Registry, subsystem string, metricsAggregation bool) (handler func(*gin.Context), err error) {
-	requestsDuration, err := r.RegisterNewSummaryVec(fmt.Sprintf("http_%v_request_duration_us", subsystem), prometheus.SummaryOpts{
-		Subsystem: subsystem,
+func NewMetrics(
+	r *metrics.Registry,
+	subsystem string,
+	metricsAggregation bool,
+) (handler func(*gin.Context), err error) {
+	requestsDuration, err := r.RegisterNewSummaryVec(
+		fmt.Sprintf("http_%v_request_duration_us", subsystem),
+		prometheus.SummaryOpts{
+			Subsystem: subsystem,
 
-		Name:       "request_duration_us",
-		Help:       "The response time of requests",
-		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-	}, []string{"endpoint", "status"})
+			Name:       "request_duration_us",
+			Help:       "The response time of requests",
+			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+		},
+		[]string{"endpoint", "status"},
+	)
 	if err != nil {
 		return
 	}

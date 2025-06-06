@@ -21,7 +21,11 @@ func NewResolverBuilder(registry Registry) resolver.Builder {
 	}
 }
 
-func (rb *resolverBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
+func (rb *resolverBuilder) Build(
+	target resolver.Target,
+	cc resolver.ClientConn,
+	opts resolver.BuildOptions,
+) (resolver.Resolver, error) {
 	r := newResolver(target, rb.registry, cc)
 	go r.start()
 
@@ -83,7 +87,12 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 	}
 
 	if logger.V(2) {
-		logger.Infof("setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n", rr.service.Name(), is, addrs)
+		logger.Infof(
+			"setting new service (`%v`) addresses from registry: `%v` from raw instances `%v`\n",
+			rr.service.Name(),
+			is,
+			addrs,
+		)
 	}
 	err := rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
