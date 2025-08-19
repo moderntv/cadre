@@ -2,6 +2,7 @@ package file
 
 import (
 	"log"
+	"slices"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -19,7 +20,7 @@ type fileRegistry struct {
 
 	// wLock protects watchers
 	wLock    sync.RWMutex
-	watchers map[string][]chan registry.RegistryChange
+	watchers map[string][]watcher
 }
 
 type options struct {
@@ -60,7 +61,7 @@ func NewRegistry(filePath string, opts ...option) (registry.Registry, error) {
 		v:         v,
 		services:  servicesMap{},
 		instances: map[string]map[string]struct{}{},
-		watchers:  map[string][]chan registry.RegistryChange{},
+		watchers:  map[string][]watcher{},
 	}
 
 	// r.v.AddConfigPath(".")
@@ -114,22 +115,23 @@ func (fr *fileRegistry) Watch(service string) (<-chan registry.RegistryChange, f
 	fr.wLock.Lock()
 	defer fr.wLock.Unlock()
 
-	c := make(chan registry.RegistryChange)
 	if _, ok := fr.watchers[service]; !ok {
-		fr.watchers[service] = []chan registry.RegistryChange{}
+		fr.watchers[service] = make([]watcher, 0)
 	}
-	p := len(fr.watchers[service])
-	fr.watchers[service] = append(fr.watchers[service], c)
-	f := func() {
+
+	w := newWatcher()
+	fr.watchers[service] = append(fr.watchers[service], w)
+	stopFn := func() {
 		fr.wLock.Lock()
 		defer fr.wLock.Unlock()
 
-		fr.watchers[service] = append(fr.watchers[service][:p], fr.watchers[service][p+1:]...)
-
-		close(c)
+		fr.watchers[service] = slices.DeleteFunc(fr.watchers[service], func(watcher watcher) bool {
+			return w.id == watcher.id
+		})
+		close(w.changeCh)
 	}
 
-	return c, f
+	return w.changeCh, stopFn
 }
 
 func (fr *fileRegistry) loadInstancesFromViper() error {
@@ -207,7 +209,7 @@ func (fr *fileRegistry) loadInstancesFromViper() error {
 		serviceWatchers, ok := fr.watchers[service]
 		if ok {
 			for _, watcher := range serviceWatchers {
-				watcher <- change
+				watcher.changeCh <- change
 			}
 		}
 	}
