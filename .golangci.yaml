@@ -59,6 +59,7 @@ linters:
             - github.com/fsnotify/fsnotify
             - github.com/cespare/xxhash
             - github.com/hashicorp/consul
+            - github.com/google/uuid
 
 formatters:
   enable:

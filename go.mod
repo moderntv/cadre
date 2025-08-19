@@ -8,6 +8,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hashicorp/consul/api v1.29.2
 	github.com/moderntv/hashring v1.0.3
@@ -16,6 +17,7 @@ require (
 	github.com/rkollar/go-grpc-middleware v1.2.3-0.20201020153056-bb8b0531b026
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/viper v1.15.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/net v0.39.0
 	google.golang.org/grpc v1.71.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -202,7 +204,6 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.2.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/tdakkota/asciicheck v0.4.1 // indirect
 	github.com/tetafro/godot v1.5.1 // indirect
