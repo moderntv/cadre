@@ -60,6 +60,7 @@ linters:
             - github.com/cespare/xxhash
             - github.com/hashicorp/consul
             - github.com/google/uuid
+            - github.com/stretchr/testify
 
 formatters:
   enable:
