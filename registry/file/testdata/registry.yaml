@@ -1,0 +1,8 @@
+---
+aggregator:
+  - aggregator1.moderntv.eu
+  - aggregator2.moderntv.eu
+  - aggregator3.moderntv.eu
+
+ingest:
+  - ingest.moderntv.eu
