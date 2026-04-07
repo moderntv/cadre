@@ -3,7 +3,9 @@ package cadre
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/moderntv/cadre/metrics"
 	"github.com/moderntv/cadre/status"
@@ -97,6 +99,24 @@ func WithPrometheusRegistry(registry *prometheus.Registry) Option {
 func WithMetricsListeningAddress(serverListeningAddress string) Option {
 	return func(options *Builder) error {
 		options.metricsHTTPServerAddr = serverListeningAddress
+
+		return nil
+	}
+}
+
+// WithLoggingIgnorePaths configures path patterns for which HTTP logging should be skipped.
+// Each pattern is a Go regular expression matched against the request URL path.
+// This applies to all HTTP servers including internal metrics and status servers.
+func WithLoggingIgnorePaths(patterns ...string) Option {
+	return func(options *Builder) error {
+		for _, p := range patterns {
+			compiled, err := regexp.Compile(p)
+			if err != nil {
+				return fmt.Errorf("failed compiling logging ignore pattern %q: %w", p, err)
+			}
+
+			options.loggingIgnorePatterns = append(options.loggingIgnorePatterns, compiled)
+		}
 
 		return nil
 	}

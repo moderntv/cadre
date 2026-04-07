@@ -8,6 +8,7 @@ import (
 	"net"
 	stdhttp "net/http"
 	"os"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -58,6 +59,9 @@ type Builder struct {
 	prometheusRegistry    *prometheus.Registry
 	metricsHTTPServerAddr string
 	metricsPath           string
+
+	// logging
+	loggingIgnorePatterns []*regexp.Regexp
 
 	grpcOptions *grpcOptions
 	httpOptions []*httpOptions
@@ -406,7 +410,12 @@ func (b *Builder) buildHTTP(
 	}
 
 	for _, httpOptions := range mergedHTTPOptions {
-		httpServers[httpOptions.listeningAddress], err = httpOptions.build(cadreContext, b.logger, b.metrics)
+		httpServers[httpOptions.listeningAddress], err = httpOptions.build(
+			cadreContext,
+			b.logger,
+			b.metrics,
+			b.loggingIgnorePatterns,
+		)
 		if err != nil {
 			return
 		}
