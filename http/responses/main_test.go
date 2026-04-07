@@ -18,6 +18,7 @@ func TestNewErrors(t *testing.T) {
 	type args struct {
 		errs []error
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -55,6 +56,7 @@ func TestNewError(t *testing.T) {
 	type args struct {
 		err error
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -132,6 +134,7 @@ func TestOk(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Ok response invalid status code. want %d, got %v", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Ok response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -167,6 +170,7 @@ func TestOkWithMeta(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("OkWithMeta response invalid status code. want %d, got %v", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("OkWithMeta response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -200,6 +204,7 @@ func TestCreated(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -233,6 +238,7 @@ func TestBadRequest(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -273,6 +279,7 @@ func TestCannotBind(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -306,6 +313,7 @@ func TestUnauthorized(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -339,6 +347,7 @@ func TestForbidden(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -372,6 +381,7 @@ func TestNotFound(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -405,6 +415,7 @@ func TestTimeout(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -438,6 +449,7 @@ func TestConflict(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -471,6 +483,7 @@ func TestUnavailable(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)
@@ -504,6 +517,7 @@ func TestInternalError(t *testing.T) {
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("Created response invalid status code. want %d, got %d", tt.wantStatus, res.StatusCode)
 			}
+
 			b := tt.httpTestShit.recorder.Body.String()
 			if b != tt.wantBody {
 				t.Errorf("Created response has unexpected body. want `%v`, got `%v`", tt.wantBody, b)

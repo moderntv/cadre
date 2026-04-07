@@ -37,6 +37,7 @@ func (rg RoutingGroup) Register(registrator grouper) (err error) {
 		if staticRoute.Root == "" && staticRoute.FS == nil {
 			panic("either `Root` or `FS` must be specified for static route")
 		}
+
 		if staticRoute.Root != "" && staticRoute.FS != nil {
 			panic("cannot register static route with both `Root` and `FS` specified")
 		}

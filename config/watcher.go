@@ -61,6 +61,7 @@ func merge(cs ...chan source.ConfigChange) chan source.ConfigChange {
 			for v := range c {
 				out <- v
 			}
+
 			wg.Done()
 		}(c)
 	}

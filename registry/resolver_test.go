@@ -14,6 +14,7 @@ func Test_resolverBuilder_Build(t *testing.T) {
 	type fields struct {
 		registry registry.Registry
 	}
+
 	type args struct {
 		target resolver.Target
 		cc     resolver.ClientConn
@@ -56,6 +57,7 @@ func Test_resolverBuilder_Build(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := registry.NewResolverBuilder(tt.fields.registry)
+
 			got, err := this.Build(tt.args.target, tt.args.cc, tt.args.opts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("resolverBuilder.Build() error = %v, wantErr %v", err, tt.wantErr)

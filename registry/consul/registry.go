@@ -36,6 +36,7 @@ func NewRegistry(
 ) (registry.Registry, error) {
 	config := consul.DefaultConfig()
 	config.Address = address
+
 	c, err := consul.NewClient(config)
 	if err != nil {
 		return nil, err
@@ -48,6 +49,7 @@ func NewRegistry(
 		aliases:       aliases,
 		services:      make(map[string][]registry.Instance),
 	}
+
 	return r, nil
 }
 
@@ -62,6 +64,7 @@ func (cr *consulRegistry) Deregister(serviceInstance registry.Instance) error {
 func (cr *consulRegistry) Instances(service string) []registry.Instance {
 	cr.mu.RLock()
 	defer cr.mu.RUnlock()
+
 	is, ok := cr.services[service]
 	if !ok {
 		return []registry.Instance{}
@@ -80,13 +83,17 @@ func (cr *consulRegistry) Watch(service string) (<-chan registry.RegistryChange,
 	// under write lock.
 	changesCh := make(chan registry.RegistryChange, 1024)
 	initializedCh := make(chan bool)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	go cr.watch(ctx, service, changesCh, initializedCh)
+
 	closeFn := func() {
 		close(changesCh)
 		cancel()
 	}
+
 	<-initializedCh
+
 	return changesCh, closeFn
 }
 
@@ -97,6 +104,7 @@ func (cr *consulRegistry) watch(
 	initializedCh chan<- bool,
 ) {
 	var consulService string
+
 	alias, ok := cr.aliases[service]
 	if ok {
 		consulService = alias
@@ -108,10 +116,12 @@ func (cr *consulRegistry) watch(
 
 	cr.resolveService(service, consulService, changesCh)
 	logger.Infof("initialized registry for service (%s)", service)
+
 	initializedCh <- true
 
 	logger.Infof("watching changes for service (%s) every (%s)", service, cr.refreshPeriod)
 	ticker := time.NewTicker(cr.refreshPeriod)
+
 	for {
 		select {
 		case <-ticker.C:
@@ -158,14 +168,17 @@ func (cr *consulRegistry) writeChanges(
 ) {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
+
 	oldInstances := cr.services[service]
 	changed := false
+
 	for _, oldInstance := range oldInstances {
 		containsFunc := func(i registry.Instance) bool {
 			return i.Address() == oldInstance.Address()
 		}
 		if !slices.ContainsFunc(newInstances, containsFunc) {
 			changed = true
+
 			ch <- registry.RegistryChange{
 				Instance: oldInstance,
 				Type:     registry.RCTDeregistered,
@@ -179,6 +192,7 @@ func (cr *consulRegistry) writeChanges(
 		}
 		if !slices.ContainsFunc(oldInstances, containsFunc) {
 			changed = true
+
 			ch <- registry.RegistryChange{
 				Instance: newInstance,
 				Type:     registry.RCTRegistered,

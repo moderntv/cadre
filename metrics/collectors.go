@@ -26,6 +26,7 @@ func (registry *Registry) RegisterOrGetNewSummaryVec(
 	labels []string,
 ) (c *prometheus.SummaryVec, err error) {
 	c = registry.NewSummaryVec(opts, labels)
+
 	cReturned, err := registry.RegisterOrGet(name, c)
 	if err != nil {
 		return
@@ -62,6 +63,7 @@ func (registry *Registry) RegisterOrGetNewCounter(
 	opts prometheus.CounterOpts,
 ) (c prometheus.Counter, err error) {
 	c = registry.NewCounter(opts)
+
 	cReturned, err := registry.RegisterOrGet(name, c)
 	if err != nil {
 		return
@@ -100,6 +102,7 @@ func (registry *Registry) RegisterOrGetNewCounterVec(
 	labels []string,
 ) (c *prometheus.CounterVec, err error) {
 	c = registry.NewCounterVec(opts, labels)
+
 	cReturned, err := registry.RegisterOrGet(name, c)
 	if err != nil {
 		return
@@ -133,6 +136,7 @@ func (registry *Registry) RegisterOrGetNewGauge(
 	opts prometheus.GaugeOpts,
 ) (c prometheus.Gauge, err error) {
 	c = registry.NewGauge(opts)
+
 	cReturned, err := registry.RegisterOrGet(name, c)
 	if err != nil {
 		return
@@ -171,6 +175,7 @@ func (registry *Registry) RegisterOrGetNewGaugeVec(
 	labels []string,
 ) (c *prometheus.GaugeVec, err error) {
 	c = registry.NewGaugeVec(opts, labels)
+
 	cReturned, err := registry.RegisterOrGet(name, c)
 	if err != nil {
 		return

@@ -51,7 +51,8 @@ func WithWatch(watchA ...bool) option {
 func NewRegistry(filePath string, opts ...option) (registry.Registry, error) {
 	options := newOptions()
 	for _, opt := range opts {
-		if err := opt(options); err != nil {
+		err := opt(options)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -69,7 +70,9 @@ func NewRegistry(filePath string, opts ...option) (registry.Registry, error) {
 	// r.v.SetConfigName("registry")
 	// r.v.SetConfigType("yaml")
 	r.v.SetConfigFile(filePath)
-	if err := v.ReadInConfig(); err != nil {
+
+	err := v.ReadInConfig()
+	if err != nil {
 		return nil, err
 	}
 
@@ -77,7 +80,9 @@ func NewRegistry(filePath string, opts ...option) (registry.Registry, error) {
 		r.v.WatchConfig()
 		r.v.OnConfigChange(func(e fsnotify.Event) {
 			log.Println("registry updated", e)
-			if err := r.loadInstancesFromViper(); err != nil {
+
+			err := r.loadInstancesFromViper()
+			if err != nil {
 				log.Println("error reloading file registry config:", err)
 			}
 		})
@@ -108,6 +113,7 @@ func (fr *fileRegistry) Instances(service string) []registry.Instance {
 	if !ok {
 		return []registry.Instance{}
 	}
+
 	return is
 }
 
@@ -128,6 +134,7 @@ func (fr *fileRegistry) Watch(service string) (<-chan registry.RegistryChange, f
 		fr.watchers[service] = slices.DeleteFunc(fr.watchers[service], func(watcher watcher) bool {
 			return w.id == watcher.id
 		})
+
 		close(w.changeCh)
 	}
 
@@ -138,13 +145,17 @@ func (fr *fileRegistry) loadInstancesFromViper() error {
 	changes := []registry.RegistryChange{}
 
 	rawRegistryData := map[string][]string{}
-	if err := fr.v.Unmarshal(&rawRegistryData); err != nil {
+
+	err := fr.v.Unmarshal(&rawRegistryData)
+	if err != nil {
 		return err
 	}
 
 	fr.sLock.RLock()
+
 	newServices := servicesMap{}
 	newInstances := map[string]map[string]struct{}{}
+
 	for service, addrs := range rawRegistryData {
 		newServices[service] = []registry.Instance{}
 		newInstances[service] = map[string]struct{}{}
@@ -196,6 +207,7 @@ func (fr *fileRegistry) loadInstancesFromViper() error {
 			}
 		}
 	}
+
 	fr.sLock.RUnlock()
 
 	fr.sLock.Lock()
@@ -204,8 +216,10 @@ func (fr *fileRegistry) loadInstancesFromViper() error {
 	fr.sLock.Unlock()
 
 	fr.wLock.RLock()
+
 	for _, change := range changes {
 		service := change.Instance.ServiceName()
+
 		serviceWatchers, ok := fr.watchers[service]
 		if ok {
 			for _, watcher := range serviceWatchers {
@@ -213,6 +227,7 @@ func (fr *fileRegistry) loadInstancesFromViper() error {
 			}
 		}
 	}
+
 	fr.wLock.RUnlock()
 
 	return nil

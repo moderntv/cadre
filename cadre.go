@@ -49,6 +49,7 @@ func (c *cadre) Start() (err error) {
 
 	go func() {
 		n := 0
+
 		for sig := range sigs {
 			if c.finisherCallback == nil {
 				c.finalizerDone <- true
@@ -59,11 +60,13 @@ func (c *cadre) Start() (err error) {
 				c.finalizerDone <- true
 				break
 			}
+
 			n += 1
 
 			if c.finisherCallback != nil && n == 1 {
 				go func(sig os.Signal) {
 					c.finisherCallback(sig)
+
 					c.finalizerDone <- true
 				}(sig)
 			}
@@ -73,11 +76,13 @@ func (c *cadre) Start() (err error) {
 	// start http servers
 	for port, httpServer := range c.httpServers {
 		c.swg.Add(1)
+
 		go c.startHTTPServer(port, httpServer)
 	}
 
 	// start grpc server
 	c.swg.Add(1)
+
 	go c.startGRPC()
 
 	select {
@@ -98,6 +103,7 @@ func (c *cadre) Start() (err error) {
 // The Start function initiates the context cancelation and waits.
 func (c *cadre) Shutdown() error {
 	c.finalizerDone <- true
+
 	close(c.finalizerDone)
 
 	return nil
@@ -113,6 +119,7 @@ func (c *cadre) startHTTPServer(addr string, httpServer *stdhttp.Server) {
 	go func() {
 		// wait for cadre's context to be done and shutdown the http server
 		<-c.ctx.Done()
+
 		_ = httpServer.Shutdown(context.Background())
 	}()
 
@@ -126,6 +133,7 @@ func (c *cadre) startHTTPServer(addr string, httpServer *stdhttp.Server) {
 
 func (c *cadre) healthServerCheck() {
 	t := time.NewTicker(5 * time.Second)
+
 	for {
 		select {
 		case <-t.C:
@@ -149,6 +157,7 @@ func (c *cadre) startGRPC() {
 	c.logger.Debug().
 		Interface("listener", c.grpcListener).
 		Msg("grpc listener")
+
 	if c.grpcListener == nil || c.grpcServer == nil {
 		c.logger.Trace().Msg("standalone grpc server disabled")
 

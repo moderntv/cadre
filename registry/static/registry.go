@@ -39,6 +39,7 @@ func (sr *staticRegistry) Instances(service string) []registry.Instance {
 	if !ok {
 		return []registry.Instance{}
 	}
+
 	return is
 }
 

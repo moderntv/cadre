@@ -51,10 +51,12 @@ func TestRegistry_Register(t *testing.T) {
 		prometheusRegistry *prometheus.Registry
 		metrics            map[string]prometheus.Collector
 	}
+
 	type args struct {
 		name string
 		c    prometheus.Collector
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -130,7 +132,9 @@ func TestRegistry_Register(t *testing.T) {
 				prometheusRegistry: tt.fields.prometheusRegistry,
 				metrics:            tt.fields.metrics,
 			}
-			if err := registry.Register(tt.args.name, tt.args.c); (err != nil) != tt.wantErr {
+
+			err := registry.Register(tt.args.name, tt.args.c)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("Registry.Register() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -142,9 +146,11 @@ func TestRegistry_Unregister(t *testing.T) {
 		prometheusRegistry *prometheus.Registry
 		metrics            map[string]prometheus.Collector
 	}
+
 	type args struct {
 		name string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -184,7 +190,9 @@ func TestRegistry_Unregister(t *testing.T) {
 				prometheusRegistry: tt.fields.prometheusRegistry,
 				metrics:            tt.fields.metrics,
 			}
-			if err := registry.Unregister(tt.args.name); (err != nil) != tt.wantErr {
+
+			err := registry.Unregister(tt.args.name)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("Registry.Unregister() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -200,9 +208,11 @@ func TestRegistry_Get(t *testing.T) {
 		prometheusRegistry *prometheus.Registry
 		metrics            map[string]prometheus.Collector
 	}
+
 	type args struct {
 		name string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -244,11 +254,13 @@ func TestRegistry_Get(t *testing.T) {
 				prometheusRegistry: tt.fields.prometheusRegistry,
 				metrics:            tt.fields.metrics,
 			}
+
 			gotC, err := registry.Get(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Registry.Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(gotC, tt.wantC) {
 				t.Errorf("Registry.Get() = %+v, want %+v", gotC, tt.wantC)
 			}

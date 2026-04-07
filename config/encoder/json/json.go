@@ -14,10 +14,10 @@ func NewEncoder() (ye *JsonEncoder) {
 	return &JsonEncoder{}
 }
 
-func (ye *JsonEncoder) Encode(data interface{}) ([]byte, error) {
+func (ye *JsonEncoder) Encode(data any) ([]byte, error) {
 	return json.Marshal(data)
 }
 
-func (ye *JsonEncoder) Decode(data []byte, dst interface{}) error {
+func (ye *JsonEncoder) Decode(data []byte, dst any) error {
 	return json.Unmarshal(data, dst)
 }

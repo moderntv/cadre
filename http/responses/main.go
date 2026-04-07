@@ -27,6 +27,7 @@ func NewErrors(errs ...error) []Error {
 	for i, err := range errs {
 		errors[i] = NewError(err)
 	}
+
 	return errors
 }
 
@@ -43,22 +44,27 @@ func FromError(c *gin.Context, err error) {
 		BadRequest(c, NewError(err))
 		return
 	}
+
 	if errors.Is(err, cerr.ErrNotAllowed) {
 		Forbidden(c, NewError(err))
 		return
 	}
+
 	if errors.Is(err, cerr.ErrNotFound) {
 		NotFound(c, NewError(err))
 		return
 	}
+
 	if errors.Is(err, cerr.ErrTemporaryUnavailable) {
 		Unavailable(c, NewError(err))
 		return
 	}
+
 	if errors.Is(err, cerr.ErrInternalError) {
 		InternalError(c, NewError(err))
 		return
 	}
+
 	InternalError(c, NewError(err))
 }
 
@@ -99,6 +105,7 @@ func CannotBind(c *gin.Context, err error) {
 		msg = "There were errors when applying sent data to template: " + err.Error()
 		data = err.Error()
 	}
+
 	BadRequest(c, Error{
 		Type:    "UNKNOWN_INPUT_VALIDATION_ERROR",
 		Message: msg,

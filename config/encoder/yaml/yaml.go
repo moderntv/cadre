@@ -13,10 +13,10 @@ func NewEncoder() (ye *YamlEncoder) {
 	return &YamlEncoder{}
 }
 
-func (ye *YamlEncoder) Encode(data interface{}) ([]byte, error) {
+func (ye *YamlEncoder) Encode(data any) ([]byte, error) {
 	return yaml.Marshal(data)
 }
 
-func (ye *YamlEncoder) Decode(data []byte, dst interface{}) error {
+func (ye *YamlEncoder) Decode(data []byte, dst any) error {
 	return yaml.Unmarshal(data, dst)
 }

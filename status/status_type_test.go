@@ -66,6 +66,7 @@ func TestStatusType_MarshalJSON(t *testing.T) {
 				t.Errorf("StatusType.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StatusType.MarshalJSON() = %v, want %v", string(got), string(tt.want))
 			}
@@ -107,9 +108,12 @@ func TestStatusType_UnmarshalJSON(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var res StatusType
-			if err := res.UnmarshalJSON([]byte(tt.src)); (err != nil) != tt.wantErr {
+
+			err := res.UnmarshalJSON([]byte(tt.src))
+			if (err != nil) != tt.wantErr {
 				t.Errorf("StatusType.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 			}
+
 			if !reflect.DeepEqual(res, tt.dest) {
 				t.Errorf("StatusType.UnmarshalJSON() want = %v, got %v", tt.dest, res)
 			}
