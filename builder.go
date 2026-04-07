@@ -1,6 +1,7 @@
 package cadre
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -25,7 +26,6 @@ import (
 	grpc_recovery "github.com/rkollar/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/rkollar/go-grpc-middleware/tags"
 	"github.com/rs/zerolog"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	channelz_service "google.golang.org/grpc/channelz/service"
 	"google.golang.org/grpc/health"
@@ -211,6 +211,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 					r.Header.Get("Content-Type"),
 					r.Header,
 				)
+
 				if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
 					c.grpcServer.ServeHTTP(w, r)
 				} else {
@@ -219,6 +220,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 			})
 
 			log.Println("disable grpcListener")
+
 			c.grpcListener = nil
 		}
 
@@ -243,6 +245,7 @@ func (b *Builder) ensure() (err error) {
 		// if b.prometheusRegistry is nil, metrics will just create a new one
 		b.metrics, err = metrics.NewRegistry(b.name, b.prometheusRegistry)
 	}
+
 	if b.prometheusRegistry == nil {
 		b.prometheusRegistry = b.metrics.GetPrometheusRegistry()
 	}
@@ -273,6 +276,7 @@ func (b *Builder) ensure() (err error) {
 		if b.statusHTTPServerAddr == "" {
 			b.statusHTTPServerAddr = b.httpOptions[0].listeningAddress
 		}
+
 		if b.metricsHTTPServerAddr == "" {
 			b.metricsHTTPServerAddr = b.httpOptions[0].listeningAddress
 		}
@@ -288,6 +292,7 @@ func (b *Builder) ensure() (err error) {
 func (b *Builder) buildGrpc(c *cadre) (err error) {
 	// metrics
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
+
 	err = b.metrics.Register("grpc", grpcMetrics)
 	if err != nil {
 		err = fmt.Errorf("cannot register grpc metrics to metrics registry: %w", err)
@@ -383,6 +388,7 @@ func (b *Builder) buildHTTP(
 	httpServers = map[string]*http.HttpServer{}
 
 	mergedHTTPOptions := map[string]*httpOptions{}
+
 	for _, newServer := range b.httpOptions {
 		addr := newServer.listeningAddress
 		if existingServer, ok := mergedHTTPOptions[addr]; ok {
