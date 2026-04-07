@@ -10,7 +10,8 @@ bin
 *.test
 
 # Outputs of the go coverage tool, static analysis etc.
-*.out*
+*.out
+*.out.html
 
 # Go workspace file
 go.work
@@ -26,3 +27,6 @@ go.work.sum
 # Inputs and outputs
 cp.out
 golangci-lint.out
+
+# AI
+*.local.json
