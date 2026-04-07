@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )
 
-func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
+func NewLogger(baseLogger zerolog.Logger, ignorePatterns []*regexp.Regexp) func(*gin.Context) {
 	logger := baseLogger.With().Str("module", "http").Logger()
 
 	return func(c *gin.Context) {
@@ -16,10 +17,14 @@ func NewLogger(baseLogger zerolog.Logger) func(*gin.Context) {
 
 		c.Next()
 
-		latency := time.Since(start)
-		// path := c.FullPath()
 		path := c.Request.URL.Path
+		for _, pattern := range ignorePatterns {
+			if pattern.MatchString(path) {
+				return
+			}
+		}
 
+		latency := time.Since(start)
 		dumplogger := logger.With().
 			Str("method", c.Request.Method).
 			Str("path", path).
