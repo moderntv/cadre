@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/moderntv/cadre/http"
@@ -20,6 +21,7 @@ type httpOptions struct {
 
 	enableLoggingMiddleware bool
 	enableMetricsMiddleware bool
+	loggingIgnorePatterns   []*regexp.Regexp
 
 	routerOptions      []gin.OptionFunc
 	globalMiddleware   []gin.HandlerFunc
@@ -45,6 +47,7 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 
 		enableLoggingMiddleware: h.enableLoggingMiddleware,
 		enableMetricsMiddleware: h.enableMetricsMiddleware,
+		loggingIgnorePatterns:   append(h.loggingIgnorePatterns, other.loggingIgnorePatterns...),
 
 		routerOptions:      append(h.routerOptions, other.routerOptions...),
 		globalMiddleware:   append(h.globalMiddleware, other.globalMiddleware...),
@@ -71,6 +74,7 @@ func (h *httpOptions) build(
 	{
 		if h.enableMetricsMiddleware {
 			var metricsMiddleware gin.HandlerFunc
+
 			metricsMiddleware, err = middleware.NewMetrics(metricsRegistry, h.serverName, h.metricsAggregation)
 			if err != nil {
 				return
@@ -80,7 +84,7 @@ func (h *httpOptions) build(
 		}
 
 		if h.enableLoggingMiddleware {
-			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger))
+			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger, h.loggingIgnorePatterns))
 		}
 
 		serverMiddlewares = append(serverMiddlewares, gin.Recovery())
@@ -195,12 +199,15 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 		if !ok {
 			automaticMethods(group)
 			h.routingGroups[group.Base] = group
+
 			return nil
 		}
+
 		group, err = mergeRoutingGroups(g, group)
 		if err != nil {
 			return err
 		}
+
 		automaticMethods(group)
 		h.routingGroups[group.Base] = group
 
@@ -227,6 +234,23 @@ func WithoutLoggingMiddleware() HTTPOption {
 func WithoutMetricsMiddleware() HTTPOption {
 	return func(h *httpOptions) error {
 		h.enableMetricsMiddleware = false
+		return nil
+	}
+}
+
+// WithLoggingIgnorePaths configures path patterns for which logging should be skipped.
+// Each pattern is a Go regular expression matched against the request URL path.
+func WithLoggingIgnorePaths(patterns ...string) HTTPOption {
+	return func(h *httpOptions) error {
+		for _, p := range patterns {
+			compiled, err := regexp.Compile(p)
+			if err != nil {
+				return fmt.Errorf("failed compiling logging ignore pattern %q: %w", p, err)
+			}
+
+			h.loggingIgnorePatterns = append(h.loggingIgnorePatterns, compiled)
+		}
+
 		return nil
 	}
 }
