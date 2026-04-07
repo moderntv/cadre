@@ -21,7 +21,6 @@ type httpOptions struct {
 
 	enableLoggingMiddleware bool
 	enableMetricsMiddleware bool
-	loggingIgnorePatterns   []*regexp.Regexp
 
 	routerOptions      []gin.OptionFunc
 	globalMiddleware   []gin.HandlerFunc
@@ -47,7 +46,6 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 
 		enableLoggingMiddleware: h.enableLoggingMiddleware,
 		enableMetricsMiddleware: h.enableMetricsMiddleware,
-		loggingIgnorePatterns:   append(h.loggingIgnorePatterns, other.loggingIgnorePatterns...),
 
 		routerOptions:      append(h.routerOptions, other.routerOptions...),
 		globalMiddleware:   append(h.globalMiddleware, other.globalMiddleware...),
@@ -69,6 +67,7 @@ func (h *httpOptions) build(
 	cadreContext context.Context,
 	logger zerolog.Logger,
 	metricsRegistry *metrics.Registry,
+	loggingIgnorePatterns []*regexp.Regexp,
 ) (httpServer *http.HttpServer, err error) {
 	serverMiddlewares := []gin.HandlerFunc{}
 	{
@@ -84,7 +83,7 @@ func (h *httpOptions) build(
 		}
 
 		if h.enableLoggingMiddleware {
-			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger, h.loggingIgnorePatterns))
+			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger, loggingIgnorePatterns))
 		}
 
 		serverMiddlewares = append(serverMiddlewares, gin.Recovery())
@@ -234,23 +233,6 @@ func WithoutLoggingMiddleware() HTTPOption {
 func WithoutMetricsMiddleware() HTTPOption {
 	return func(h *httpOptions) error {
 		h.enableMetricsMiddleware = false
-		return nil
-	}
-}
-
-// WithLoggingIgnorePaths configures path patterns for which logging should be skipped.
-// Each pattern is a Go regular expression matched against the request URL path.
-func WithLoggingIgnorePaths(patterns ...string) HTTPOption {
-	return func(h *httpOptions) error {
-		for _, p := range patterns {
-			compiled, err := regexp.Compile(p)
-			if err != nil {
-				return fmt.Errorf("failed compiling logging ignore pattern %q: %w", p, err)
-			}
-
-			h.loggingIgnorePatterns = append(h.loggingIgnorePatterns, compiled)
-		}
-
 		return nil
 	}
 }
