@@ -1,6 +1,7 @@
 package cadre
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/moderntv/cadre/status"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
-	"golang.org/x/net/context"
 )
 
 type Option func(*Builder) error
