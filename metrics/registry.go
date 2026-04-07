@@ -43,6 +43,7 @@ func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (reg
 		err = fmt.Errorf("cannot register go collector: %w", err)
 		return
 	}
+
 	err = registry.Register("process", collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	if err != nil {
 		err = fmt.Errorf("cannot register process collector: %w", err)
@@ -57,10 +58,12 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 		err = ErrNameEmpty
 		return
 	}
+
 	if c == nil {
 		err = ErrMetricNil
 		return
 	}
+
 	if _, ok := registry.metrics[name]; ok {
 		err = ErrMetricAlreadyExists
 		return
@@ -70,6 +73,7 @@ func (registry *Registry) Register(name string, c prometheus.Collector) (err err
 	if err != nil {
 		return
 	}
+
 	registry.metrics[name] = c
 
 	return

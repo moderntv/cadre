@@ -205,7 +205,7 @@ func (b *Builder) Build() (c *cadre, err error) {
 		// http+grpc multiplexing
 		if b.grpcOptions != nil && b.grpcOptions.listeningAddress == addr {
 			h = stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-				log.Printf(
+				log.Printf( //nolint: gosec
 					"handling http request. protomajor = %v; content-type = %v; headers = %v",
 					r.ProtoMajor,
 					r.Header.Get("Content-Type"),
@@ -372,7 +372,9 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 
 	// grpc listener
 	if b.grpcOptions.listeningAddress != "" && !b.grpcOptions.multiplexWithHTTP {
-		c.grpcListener, err = net.Listen("tcp", b.grpcOptions.listeningAddress)
+		var lc net.ListenConfig
+
+		c.grpcListener, err = lc.Listen(b.ctx, "tcp", b.grpcOptions.listeningAddress)
 		if err != nil {
 			return
 		}

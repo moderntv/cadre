@@ -90,7 +90,7 @@ func WithPrometheusRegistry(registry *prometheus.Registry) Option {
 	}
 }
 
-// WithPrometheusListeningAddress is meant to configure cadre to use
+// WithMetricsListeningAddress is meant to configure cadre to use
 // a separate http server for prometheus - useful for putting it behind firewall
 // Default is to use the first HTTP server's listening address merging them together. This may cause problems
 // when a conflicting route is configured.

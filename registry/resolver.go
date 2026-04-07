@@ -70,6 +70,7 @@ func (rr *registryResolver) Close() {
 func (rr *registryResolver) start() {
 	c, stop := rr.registry.Watch(rr.service.Name())
 	rr.updateAddressesFromRegistry()
+
 	for {
 		select {
 		case <-c:
@@ -89,7 +90,8 @@ func (rr *registryResolver) start() {
 
 func (rr *registryResolver) updateAddressesFromRegistry() {
 	is := rr.registry.Instances(rr.service.Name())
-	addrs := []resolver.Address{}
+
+	addrs := make([]resolver.Address, 0, len(is))
 	for _, i := range is {
 		addrs = append(addrs, resolver.Address{Addr: i.Address()})
 	}
@@ -102,6 +104,7 @@ func (rr *registryResolver) updateAddressesFromRegistry() {
 			addrs,
 		)
 	}
+
 	err := rr.cc.UpdateState(resolver.State{
 		Addresses: addrs,
 	})

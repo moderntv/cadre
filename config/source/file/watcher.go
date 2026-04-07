@@ -49,6 +49,7 @@ func (w *watcher) C() chan source.ConfigChange {
 				if err == nil || errors.Is(err, fs.ErrExist) {
 					_ = w.fsnw.Add(event.Name)
 				}
+
 				continue
 			case fsnotify.Chmod, fsnotify.Write:
 			}
@@ -56,6 +57,7 @@ func (w *watcher) C() chan source.ConfigChange {
 			c <- source.ConfigChange{
 				SourceName: Name,
 			}
+
 			_ = w.fsnw.Add(w.path)
 		}
 

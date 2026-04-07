@@ -10,7 +10,7 @@ import (
 type ComponentReport struct {
 	Status    StatusType `json:"status"`
 	Message   string     `json:"message,omitempty"`
-	UpdatedAt time.Time  `json:"updated_at,omitempty"` //nolint: tagliatelle
+	UpdatedAt time.Time  `json:"updated_at,omitzero"` //nolint: tagliatelle
 }
 type Report struct {
 	Version    string                     `json:"version"`
@@ -86,6 +86,7 @@ func (s *Status) Report() (report Report) {
 	report.Version = s.version
 	report.Hostname = s.hostname
 	report.Status = OK
+
 	report.Components = make(map[string]ComponentReport)
 	for n, cs := range s.components {
 		report.Components[n] = ComponentReport{
@@ -94,11 +95,13 @@ func (s *Status) Report() (report Report) {
 			UpdatedAt: cs.LastUpdate(),
 		}
 	}
+
 	for _, s := range report.Components {
 		if s.Status == ERROR {
 			report.Status = ERROR
 			break
 		}
+
 		if s.Status == WARN && report.Status != ERROR {
 			report.Status = WARN
 		}

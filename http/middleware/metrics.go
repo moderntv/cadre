@@ -45,8 +45,11 @@ func NewMetrics(
 
 	handler = func(c *gin.Context) {
 		t := time.Now()
+
 		c.Next()
+
 		d := time.Since(t)
+
 		path := c.Request.URL.Path
 		if metricsAggregation {
 			path = c.FullPath()

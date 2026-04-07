@@ -12,5 +12,6 @@ func NewBuilder() (balancer.Builder, error) {
 func NewNamedBuilder(name string) (balancer.Builder, error) {
 	options := defaultBuilderOptions()
 	pickerBuilder := newPickerBuilder(options)
+
 	return base.NewBalancerBuilder(name, pickerBuilder, base.Config{HealthCheck: true}), nil
 }

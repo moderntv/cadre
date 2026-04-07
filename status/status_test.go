@@ -22,6 +22,7 @@ func TestNewStatus(t *testing.T) {
 	type args struct {
 		version string
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -84,6 +85,7 @@ func TestStatus_Report(t *testing.T) {
 		status  StatusType
 		message string
 	}
+
 	tests := []struct {
 		name               string
 		status             *Status
@@ -188,8 +190,10 @@ func TestStatus_Report(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// register services
 			componentStatuses := map[string]*ComponentStatus{}
+
 			for _, service := range tt.services {
 				var err error
+
 				componentStatuses[service], err = tt.status.Register(service)
 				if err != nil {
 					t.Errorf("Register() returned error = %v", err)

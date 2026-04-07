@@ -53,6 +53,7 @@ func (m *Manager) Load(dst any) (err error) {
 func (m *Manager) Subscribe() (chan source.ConfigChange, error) {
 	if m.watcher == nil {
 		var err error
+
 		m.watcher, err = newWatcher(m.sources...)
 		if err != nil {
 			return nil, err
@@ -61,16 +62,18 @@ func (m *Manager) Subscribe() (chan source.ConfigChange, error) {
 
 	msgCh := m.watcher.C()
 	m.watchSubCh <- msgCh
+
 	return msgCh, nil
 }
 
-// Subscribe returns a channel which will receive message on change.
+// Unsubscribe removes a previously subscribed channel from change notifications.
 func (m *Manager) Unsubscribe(msgCh chan source.ConfigChange) {
 	m.watchUnsubCh <- msgCh
 }
 
 func (m *Manager) manageSubscribers() {
 	subs := map[chan source.ConfigChange]struct{}{}
+
 	for {
 		select {
 		// case <-c.stopCh:

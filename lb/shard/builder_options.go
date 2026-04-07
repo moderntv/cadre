@@ -18,6 +18,7 @@ func defaultBuilderOptions() builderOptions {
 			if !ok {
 				return "NOT_FOUND"
 			}
+
 			return key
 		},
 	}

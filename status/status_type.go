@@ -34,11 +34,13 @@ func (s StatusType) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
 	buffer.WriteString(toString[s])
 	buffer.WriteString(`"`)
+
 	return buffer.Bytes(), nil
 }
 
 func (s *StatusType) UnmarshalJSON(b []byte) error {
 	var j string
+
 	err := json.Unmarshal(b, &j)
 	if err != nil {
 		return err
@@ -50,5 +52,6 @@ func (s *StatusType) UnmarshalJSON(b []byte) error {
 	}
 
 	*s = t
+
 	return nil
 }
