@@ -19,25 +19,7 @@ type service struct {
 	healthService *health.Server // can be nil
 }
 
-// newService creates a new service instance. if healthService is disabled in Server, it can be nil
-//
-//nolint:deadcode
-func newService(name string, cs *status.ComponentStatus, healthService *health.Server) (i Service) {
-	i = &service{
-		name: name,
-
-		status:        cs,
-		healthService: healthService,
-	}
-
-	(i.(*service)).SetUnhealthy()
-
-	return
-}
-
 func (i *service) Name() string { return i.name }
-
-// func (i *instance) Address() string     { return i.endpoint }
 
 func (i *service) SetHealthy() {
 	if i.healthService == nil {

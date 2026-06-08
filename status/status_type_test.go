@@ -5,6 +5,11 @@ import (
 	"testing"
 )
 
+const (
+	testNameWarn  = "warn"
+	testNameError = "error"
+)
+
 func TestStatusType_String(t *testing.T) {
 	tests := []struct {
 		name string
@@ -17,12 +22,12 @@ func TestStatusType_String(t *testing.T) {
 			want: "OK",
 		},
 		{
-			name: "warn",
+			name: testNameWarn,
 			s:    WARN,
 			want: "WARN",
 		},
 		{
-			name: "error",
+			name: testNameError,
 			s:    ERROR,
 			want: "ERROR",
 		},
@@ -49,12 +54,12 @@ func TestStatusType_MarshalJSON(t *testing.T) {
 			want: []byte(`"OK"`),
 		},
 		{
-			name: "warn",
+			name: testNameWarn,
 			s:    WARN,
 			want: []byte(`"WARN"`),
 		},
 		{
-			name: "error",
+			name: testNameError,
 			s:    ERROR,
 			want: []byte(`"ERROR"`),
 		},

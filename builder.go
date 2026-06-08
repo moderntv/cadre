@@ -143,7 +143,8 @@ func (b *Builder) Build() (c *cadre, err error) {
 	}
 
 	if b.statusHTTPServerAddr != "" {
-		err = WithHTTP("status_http",
+		err = WithHTTP(
+			"status_http",
 			WithHTTPListeningAddress(b.statusHTTPServerAddr),
 			WithRoute("GET", b.statusPath, func(c *gin.Context) {
 				report := b.status.Report()
@@ -166,7 +167,8 @@ func (b *Builder) Build() (c *cadre, err error) {
 	if b.grpcOptions != nil && b.grpcOptions.enableChannelz {
 		channelzHandler := channelz.CreateHandler("/", b.grpcOptions.listeningAddress)
 
-		err = WithHTTP("channelz_http",
+		err = WithHTTP(
+			"channelz_http",
 			WithHTTPListeningAddress(b.grpcOptions.channelzHttpAddr),
 			WithRoute("GET", "/channelz/*path", func(c *gin.Context) {
 				channelzHandler.ServeHTTP(c.Writer, c.Request)

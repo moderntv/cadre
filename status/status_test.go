@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+const (
+	serviceFoo          = "foo"
+	serviceBar          = "bar"
+	serviceMeh          = "meh"
+	majorFailureMessage = "Major failure"
+	mehFailureMessage   = "Meh failure"
+)
+
 var (
 	hostname string
 	err      error
@@ -97,91 +105,91 @@ func TestStatus_Report(t *testing.T) {
 		{
 			name:     "simple-ok",
 			status:   NewStatus("v6.6.6"),
-			services: []string{"foo", "bar"},
+			services: []string{serviceFoo, serviceBar},
 			servicesChanges: []map[string]serviceStatus{
 				{
-					"foo": {OK, "OK"},
-					"bar": {OK, "OK"},
+					serviceFoo: {OK, "OK"},
+					serviceBar: {OK, "OK"},
 				},
 			},
 			servicesFinal: map[string]StatusType{
-				"foo": OK,
-				"bar": OK,
+				serviceFoo: OK,
+				serviceBar: OK,
 			},
 			overallStatusFinal: OK,
 		},
 		{
 			name:     "all-errors",
 			status:   NewStatus("v6.6.6"),
-			services: []string{"foo", "bar"},
+			services: []string{serviceFoo, serviceBar},
 			servicesChanges: []map[string]serviceStatus{
 				{
-					"foo": {ERROR, "Major failure"},
-					"bar": {ERROR, "Major failure"},
+					serviceFoo: {ERROR, majorFailureMessage},
+					serviceBar: {ERROR, majorFailureMessage},
 				},
 			},
 			servicesFinal: map[string]StatusType{
-				"foo": ERROR,
-				"bar": ERROR,
+				serviceFoo: ERROR,
+				serviceBar: ERROR,
 			},
 			overallStatusFinal: ERROR,
 		},
 		{
 			name:            "uninitialized",
 			status:          NewStatus("v6.6.6"),
-			services:        []string{"foo", "bar"},
+			services:        []string{serviceFoo, serviceBar},
 			servicesChanges: []map[string]serviceStatus{},
 			servicesFinal: map[string]StatusType{
-				"foo": ERROR,
-				"bar": ERROR,
+				serviceFoo: ERROR,
+				serviceBar: ERROR,
 			},
 			overallStatusFinal: ERROR,
 		},
 		{
 			name:     "warning",
 			status:   NewStatus("v6.6.6"),
-			services: []string{"foo", "bar"},
+			services: []string{serviceFoo, serviceBar},
 			servicesChanges: []map[string]serviceStatus{
 				{
-					"foo": {OK, "OK"},
-					"bar": {WARN, "Minor failure"},
+					serviceFoo: {OK, "OK"},
+					serviceBar: {WARN, "Minor failure"},
 				},
 			},
 			servicesFinal: map[string]StatusType{
-				"foo": OK,
-				"bar": WARN,
+				serviceFoo: OK,
+				serviceBar: WARN,
 			},
 			overallStatusFinal: WARN,
 		},
 		{
 			name:     "warning-error",
 			status:   NewStatus("v6.6.6"),
-			services: []string{"k", "foo", "bar", "meh"},
+			services: []string{"k", serviceFoo, serviceBar, serviceMeh},
 			servicesChanges: []map[string]serviceStatus{
 				{
-					"k":   {OK, "OK"},
-					"meh": {WARN, "Meh failure"},
-					"foo": {ERROR, "Major failure"},
-					"bar": {WARN, "Meh failure"},
+					"k":        {OK, "OK"},
+					serviceMeh: {WARN, mehFailureMessage},
+					serviceFoo: {ERROR, majorFailureMessage},
+					serviceBar: {WARN, mehFailureMessage},
 				},
 				{
-					"k":   {OK, "OK"},
-					"meh": {WARN, "Meh failure"},
-					"foo": {WARN, "Meh failure"},
-					"bar": {ERROR, "Major failure"},
+					"k":        {OK, "OK"},
+					serviceMeh: {WARN, mehFailureMessage},
+					serviceFoo: {WARN, mehFailureMessage},
+					serviceBar: {ERROR, majorFailureMessage},
 				},
 				{
-					"k":   {OK, "OK"},
-					"meh": {WARN, "Meh failure"},
-					"foo": {ERROR, "Major failure"},
-					"bar": {ERROR, "Major failure"},
+					"k":        {OK, "OK"},
+					serviceMeh: {WARN, mehFailureMessage},
+					serviceFoo: {ERROR, majorFailureMessage},
+					serviceBar: {ERROR, majorFailureMessage},
 				},
 			},
 			servicesFinal: map[string]StatusType{
-				"k":   OK,
-				"meh": WARN,
-				"foo": ERROR,
-				"bar": ERROR,
+				"k":        OK,
+				serviceMeh: WARN,
+				serviceFoo: ERROR,
+				serviceBar: ERROR,
 			},
 			overallStatusFinal: ERROR,
 		},

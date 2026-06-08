@@ -30,7 +30,8 @@ func NewMetrics(
 		return
 	}
 
-	requestsCount, err := r.RegisterNewCounterVec(fmt.Sprintf("http_%v_requests_count", subsystem),
+	requestsCount, err := r.RegisterNewCounterVec(
+		fmt.Sprintf("http_%v_requests_count", subsystem),
 		prometheus.CounterOpts{
 			Subsystem: subsystem,
 
