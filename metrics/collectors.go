@@ -189,3 +189,79 @@ func (registry *Registry) RegisterOrGetNewGaugeVec(
 
 	return
 }
+
+// NewHistogram creates Prometheus Histogram.
+func (registry *Registry) NewHistogram(opts prometheus.HistogramOpts) prometheus.Histogram {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewHistogram(opts)
+}
+
+func (registry *Registry) RegisterNewHistogram(
+	name string,
+	opts prometheus.HistogramOpts,
+) (c prometheus.Histogram, err error) {
+	c = registry.NewHistogram(opts)
+	err = registry.Register(name, c)
+
+	return
+}
+
+func (registry *Registry) RegisterOrGetNewHistogram(
+	name string,
+	opts prometheus.HistogramOpts,
+) (c prometheus.Histogram, err error) {
+	c = registry.NewHistogram(opts)
+
+	cReturned, err := registry.RegisterOrGet(name, c)
+	if err != nil {
+		return
+	}
+
+	c, ok := cReturned.(prometheus.Histogram)
+	if !ok {
+		err = ErrInvalidType
+		return
+	}
+
+	return
+}
+
+// NewHistogramVec creates Prometheus HistogramVec.
+func (registry *Registry) NewHistogramVec(opts prometheus.HistogramOpts, labels []string) *prometheus.HistogramVec {
+	opts.Namespace = registry.namespace
+
+	return prometheus.NewHistogramVec(opts, labels)
+}
+
+func (registry *Registry) RegisterNewHistogramVec(
+	name string,
+	opts prometheus.HistogramOpts,
+	labels []string,
+) (c *prometheus.HistogramVec, err error) {
+	c = registry.NewHistogramVec(opts, labels)
+	err = registry.Register(name, c)
+
+	return
+}
+
+func (registry *Registry) RegisterOrGetNewHistogramVec(
+	name string,
+	opts prometheus.HistogramOpts,
+	labels []string,
+) (c *prometheus.HistogramVec, err error) {
+	c = registry.NewHistogramVec(opts, labels)
+
+	cReturned, err := registry.RegisterOrGet(name, c)
+	if err != nil {
+		return
+	}
+
+	c, ok := cReturned.(*prometheus.HistogramVec)
+	if !ok {
+		err = ErrInvalidType
+		return
+	}
+
+	return
+}
