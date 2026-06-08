@@ -7,6 +7,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	testNameSimple    = "simple"
+	testCounterMetric = "simple_counter"
+)
+
 // DISABLED: deepequal cannot compare pointers
 // func TestNewRegistry(t *testing.T) {
 //     simplePrometheusRegistry := prometheus.NewRegistry()
@@ -88,14 +93,14 @@ func TestRegistry_Register(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "simple",
+			name: testNameSimple,
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics:            make(map[string]prometheus.Collector),
 			},
 			args: args{
-				"simple_counter",
-				prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+				testCounterMetric,
+				prometheus.NewCounter(prometheus.CounterOpts{Name: testCounterMetric}),
 			},
 			wantErr: false,
 		},
@@ -104,11 +109,11 @@ func TestRegistry_Register(t *testing.T) {
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics: map[string]prometheus.Collector{
-					"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{}),
+					testCounterMetric: prometheus.NewCounter(prometheus.CounterOpts{}),
 				},
 			},
 			args: args{
-				"simple_counter",
+				testCounterMetric,
 				prometheus.NewCounter(prometheus.CounterOpts{}),
 			},
 			wantErr: true,
@@ -120,7 +125,7 @@ func TestRegistry_Register(t *testing.T) {
 				metrics:            map[string]prometheus.Collector{},
 			},
 			args: args{
-				"simple_counter",
+				testCounterMetric,
 				prometheus.NewCounter(prometheus.CounterOpts{}),
 			},
 			wantErr: true,
@@ -158,15 +163,15 @@ func TestRegistry_Unregister(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "simple",
+			name: testNameSimple,
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics: map[string]prometheus.Collector{
-					"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+					testCounterMetric: prometheus.NewCounter(prometheus.CounterOpts{Name: testCounterMetric}),
 				},
 			},
 			args: args{
-				"simple_counter",
+				testCounterMetric,
 			},
 			wantErr: false,
 		},
@@ -175,7 +180,7 @@ func TestRegistry_Unregister(t *testing.T) {
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics: map[string]prometheus.Collector{
-					"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+					testCounterMetric: prometheus.NewCounter(prometheus.CounterOpts{Name: testCounterMetric}),
 				},
 			},
 			args: args{
@@ -201,7 +206,7 @@ func TestRegistry_Unregister(t *testing.T) {
 
 func TestRegistry_Get(t *testing.T) {
 	collectors := map[string]prometheus.Collector{
-		"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+		testCounterMetric: prometheus.NewCounter(prometheus.CounterOpts{Name: testCounterMetric}),
 	}
 
 	type fields struct {
@@ -221,17 +226,17 @@ func TestRegistry_Get(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "simple",
+			name: testNameSimple,
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics: map[string]prometheus.Collector{
-					"simple_counter": collectors["simple_counter"],
+					testCounterMetric: collectors[testCounterMetric],
 				},
 			},
 			args: args{
-				"simple_counter",
+				testCounterMetric,
 			},
-			wantC:   collectors["simple_counter"],
+			wantC:   collectors[testCounterMetric],
 			wantErr: false,
 		},
 		{
@@ -239,7 +244,7 @@ func TestRegistry_Get(t *testing.T) {
 			fields: fields{
 				prometheusRegistry: prometheus.NewRegistry(),
 				metrics: map[string]prometheus.Collector{
-					"simple_counter": prometheus.NewCounter(prometheus.CounterOpts{Name: "simple_counter"}),
+					testCounterMetric: prometheus.NewCounter(prometheus.CounterOpts{Name: testCounterMetric}),
 				},
 			},
 			args: args{

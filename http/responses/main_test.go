@@ -10,6 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	testNameSimple   = "simple"
+	testNameEmpty    = "empty"
+	testErrorType    = "GENERIC_ERROR"
+	testErrorMessage = "Error encountered"
+)
+
 func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
@@ -25,19 +32,19 @@ func TestNewErrors(t *testing.T) {
 		want []Error
 	}{
 		{
-			name: "simple",
+			name: testNameSimple,
 			args: args{
 				errs: []error{errors.New("simple1"), errors.New("simple2")},
 			},
 			want: []Error{
 				{
-					Type:    "GENERIC_ERROR",
-					Message: "Error encountered",
+					Type:    testErrorType,
+					Message: testErrorMessage,
 					Data:    "simple1",
 				},
 				{
-					Type:    "GENERIC_ERROR",
-					Message: "Error encountered",
+					Type:    testErrorType,
+					Message: testErrorMessage,
 					Data:    "simple2",
 				},
 			},
@@ -63,13 +70,13 @@ func TestNewError(t *testing.T) {
 		want Error
 	}{
 		{
-			name: "simple",
+			name: testNameSimple,
 			args: args{
 				err: errors.New("simple"),
 			},
 			want: Error{
-				Type:    "GENERIC_ERROR",
-				Message: "Error encountered",
+				Type:    testErrorType,
+				Message: testErrorMessage,
 				Data:    "simple",
 			},
 		},
@@ -83,18 +90,6 @@ func TestNewError(t *testing.T) {
 	}
 }
 
-type httpTestShit struct {
-	recorder   *httptest.ResponseRecorder
-	ginContext *gin.Context
-}
-
-func newHttpTestshit() httpTestShit {
-	r := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(r)
-
-	return httpTestShit{r, c}
-}
-
 func TestOk(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -104,22 +99,22 @@ func TestOk(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "empty",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameEmpty,
+			httpTestShit: newHTTPTestshit(),
 			data:         nil,
 			wantStatus:   http.StatusOK,
 			wantBody:     `{"data":null}`,
 		},
 		{
 			name:         "string",
-			httpTestShit: newHttpTestshit(),
+			httpTestShit: newHTTPTestshit(),
 			data:         "foobar",
 			wantStatus:   http.StatusOK,
 			wantBody:     `{"data":"foobar"}`,
 		},
 		{
 			name:         "map",
-			httpTestShit: newHttpTestshit(),
+			httpTestShit: newHTTPTestshit(),
 			data:         map[string]any{"a": "b", "c": 4, "e": 6.01, "g": false},
 			wantStatus:   http.StatusOK,
 			wantBody:     `{"data":{"a":"b","c":4,"e":6.01,"g":false}}`,
@@ -153,8 +148,8 @@ func TestOkWithMeta(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			data:         map[string]any{"a": "b", "c": 4, "e": 6.01, "g": false},
 			metadata:     map[string]any{"lorem": "ipsum"},
 			wantStatus:   http.StatusOK,
@@ -188,8 +183,8 @@ func TestCreated(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			data:         map[string]any{"a": "b", "c": 4, "e": 6.01, "g": false},
 			wantStatus:   http.StatusCreated,
 			wantBody:     `{"data":{"a":"b","c":4,"e":6.01,"g":false}}`,
@@ -222,8 +217,8 @@ func TestBadRequest(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1"), errors.New("error2")},
 			wantStatus:   http.StatusBadRequest,
 			wantBody:     `{"message":"The request is not valid in this context","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"},{"type":"GENERIC_ERROR","message":"Error encountered","data":"error2"}]}`,
@@ -256,15 +251,15 @@ func TestCannotBind(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "empty",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameEmpty,
+			httpTestShit: newHTTPTestshit(),
 			err:          nil,
 			wantStatus:   http.StatusBadRequest,
 			wantBody:     `{"message":"The request is not valid in this context","errors":[{"type":"UNKNOWN_INPUT_VALIDATION_ERROR","message":"Sent data do not correspond to the template","data":""}]}`,
 		},
 		{
-			name:         "empty",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameEmpty,
+			httpTestShit: newHTTPTestshit(),
 			err:          errors.New("error1"),
 			wantStatus:   http.StatusBadRequest,
 			wantBody:     `{"message":"The request is not valid in this context","errors":[{"type":"UNKNOWN_INPUT_VALIDATION_ERROR","message":"There were errors when applying sent data to template: error1","data":"error1"}]}`,
@@ -297,8 +292,8 @@ func TestUnauthorized(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusUnauthorized,
 			wantBody:     `{"message":"You have to be logged in to view this resource","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
@@ -331,8 +326,8 @@ func TestForbidden(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusForbidden,
 			wantBody:     `{"message":"You are not allowed to view this resource","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
@@ -365,8 +360,8 @@ func TestNotFound(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusNotFound,
 			wantBody:     `{"message":"The resource is unavailable","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
@@ -399,8 +394,8 @@ func TestTimeout(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusRequestTimeout,
 			wantBody:     `{"message":"Request timed out"}`,
@@ -433,8 +428,8 @@ func TestConflict(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusConflict,
 			wantBody:     `{"message":"Cannot complete due to a conflict","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
@@ -467,8 +462,8 @@ func TestUnavailable(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusServiceUnavailable,
 			wantBody:     `{"message":"Service is temporarily unavailable","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
@@ -501,8 +496,8 @@ func TestInternalError(t *testing.T) {
 		wantBody     string
 	}{
 		{
-			name:         "simple",
-			httpTestShit: newHttpTestshit(),
+			name:         testNameSimple,
+			httpTestShit: newHTTPTestshit(),
 			errors:       []error{errors.New("error1")},
 			wantStatus:   http.StatusInternalServerError,
 			wantBody:     `{"message":"An unexpected error has occurred. A team of monkeys was already sent to site. We're not sure, when it will be ready, but it sure as hell will be banana","errors":[{"type":"GENERIC_ERROR","message":"Error encountered","data":"error1"}]}`,
@@ -524,4 +519,16 @@ func TestInternalError(t *testing.T) {
 			}
 		})
 	}
+}
+
+type httpTestShit struct {
+	recorder   *httptest.ResponseRecorder
+	ginContext *gin.Context
+}
+
+func newHTTPTestshit() httpTestShit {
+	r := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(r)
+
+	return httpTestShit{r, c}
 }

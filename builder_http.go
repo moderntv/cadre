@@ -96,7 +96,8 @@ func (h *httpOptions) build(
 		h.listeningAddress,
 		logger,
 		h.routerOptions,
-		serverMiddlewares...)
+		serverMiddlewares...,
+	)
 	if err != nil {
 		return
 	}

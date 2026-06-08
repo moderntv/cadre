@@ -35,6 +35,8 @@ linters:
     - nilerr
     - dupl
     - containedctx
+    # deprecated
+    - gomodguard
   settings:
     depguard:
       rules:

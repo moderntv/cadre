@@ -21,7 +21,8 @@ func TestFileRegistry(t *testing.T) {
 	t.Run("Instances_AggregatorService_ReturnsServiceInstances", func(t *testing.T) {
 		instances := fr.Instances(ingestService)
 		assert.Len(t, instances, 1)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			[]registry.Instance{
 				&instance{serviceName: ingestService, addr: "ingest.moderntv.eu"},
 			},
@@ -32,7 +33,8 @@ func TestFileRegistry(t *testing.T) {
 	t.Run("Instances_IngestService_ReturnsServiceInstances", func(t *testing.T) {
 		instances := fr.Instances(aggregatorService)
 		assert.Len(t, instances, 3)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			[]registry.Instance{
 				&instance{serviceName: aggregatorService, addr: "aggregator1.moderntv.eu"},
 				&instance{serviceName: aggregatorService, addr: "aggregator2.moderntv.eu"},
