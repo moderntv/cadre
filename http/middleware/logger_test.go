@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -23,11 +22,16 @@ func init() {
 func TestNewLogger(t *testing.T) {
 	t.Parallel()
 
+	const (
+		statusPathPattern  = `^/status$`
+		metricsPathPattern = `^/metrics$`
+	)
+
 	tests := []struct {
-		name           string
-		ignorePatterns []*regexp.Regexp
-		requestPath    string
-		expectLog      bool
+		name        string
+		ignorePaths []string
+		requestPath string
+		expectLog   bool
 	}{
 		{
 			name:        "logs normal path",
@@ -35,43 +39,34 @@ func TestNewLogger(t *testing.T) {
 			expectLog:   true,
 		},
 		{
-			name: "ignores exact status path",
-			ignorePatterns: []*regexp.Regexp{
-				regexp.MustCompile(`^/status$`),
-			},
+			name:        "ignores exact status path",
+			ignorePaths: []string{statusPathPattern},
 			requestPath: "/status",
 			expectLog:   false,
 		},
 		{
-			name: "ignores exact metrics path",
-			ignorePatterns: []*regexp.Regexp{
-				regexp.MustCompile(`^/metrics$`),
-			},
+			name:        "ignores exact metrics path",
+			ignorePaths: []string{metricsPathPattern},
 			requestPath: "/metrics",
 			expectLog:   false,
 		},
 		{
-			name: "does not ignore partial match",
-			ignorePatterns: []*regexp.Regexp{
-				regexp.MustCompile(`^/status$`),
-			},
+			name:        "does not ignore partial match",
+			ignorePaths: []string{statusPathPattern},
 			requestPath: "/status/details",
 			expectLog:   true,
 		},
 		{
-			name: "ignores with multiple patterns",
-			ignorePatterns: []*regexp.Regexp{
-				regexp.MustCompile(`^/status$`),
-				regexp.MustCompile(`^/metrics$`),
-			},
+			name:        "ignores with multiple patterns",
+			ignorePaths: []string{statusPathPattern, metricsPathPattern},
 			requestPath: "/metrics",
 			expectLog:   false,
 		},
 		{
-			name:           "no ignore patterns logs everything",
-			ignorePatterns: nil,
-			requestPath:    "/status",
-			expectLog:      true,
+			name:        "no ignore paths logs everything",
+			ignorePaths: nil,
+			requestPath: "/status",
+			expectLog:   true,
 		},
 	}
 
@@ -83,7 +78,7 @@ func TestNewLogger(t *testing.T) {
 
 			logger := zerolog.New(&buf).Level(zerolog.TraceLevel)
 
-			handler := NewLogger(logger, WithIgnorePatterns(tt.ignorePatterns...))
+			handler := newTestLogger(t, logger, WithLoggingIgnorePaths(tt.ignorePaths...))
 
 			w := httptest.NewRecorder()
 			c, r := gin.CreateTestContext(w)
@@ -106,6 +101,16 @@ func TestNewLogger(t *testing.T) {
 	}
 }
 
+func TestNewLoggerInvalidIgnorePath(t *testing.T) {
+	t.Parallel()
+
+	handler, err := NewLogger(zerolog.Nop(), WithLoggingIgnorePaths(`^/valid$`, `[unterminated`))
+
+	require.Error(t, err)
+	assert.Nil(t, handler)
+	assert.Contains(t, err.Error(), "[unterminated")
+}
+
 func TestNewLoggerFields(t *testing.T) {
 	t.Parallel()
 
@@ -116,7 +121,7 @@ func TestNewLoggerFields(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	r.Use(NewLogger(logger))
+	r.Use(newTestLogger(t, logger))
 	r.GET("/api/users/:id", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"id": c.Param("id")})
 	})
@@ -163,7 +168,7 @@ func TestNewLoggerRequestIDFromContext(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	r.Use(NewLogger(logger))
+	r.Use(newTestLogger(t, logger))
 	r.GET("/api/users", func(c *gin.Context) {
 		c.Set(RequestIDContextKey, "ctx-42")
 		c.Status(http.StatusOK)
@@ -234,7 +239,7 @@ func TestNewLoggerBodyPolicy(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, r := gin.CreateTestContext(w)
 
-			r.Use(NewLogger(logger, loggerOpts...))
+			r.Use(newTestLogger(t, logger, loggerOpts...))
 			r.POST("/api/users", func(c *gin.Context) {
 				body, err := io.ReadAll(c.Request.Body)
 				require.NoError(t, err)
@@ -281,7 +286,8 @@ func TestNewLoggerBodyTruncation(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	r.Use(NewLogger(
+	r.Use(newTestLogger(
+		t,
 		logger,
 		WithRequestBody(BodyLogAlways),
 		WithResponseBody(BodyLogAlways),
@@ -322,7 +328,7 @@ func TestNewLoggerBodyContentTypeFilter(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	r.Use(NewLogger(logger, WithRequestBody(BodyLogAlways), WithResponseBody(BodyLogAlways)))
+	r.Use(newTestLogger(t, logger, WithRequestBody(BodyLogAlways), WithResponseBody(BodyLogAlways)))
 	r.POST("/api/upload", func(c *gin.Context) {
 		_, err := io.ReadAll(c.Request.Body)
 		require.NoError(t, err)
@@ -354,7 +360,7 @@ func TestNewLoggerHeaders(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	r.Use(NewLogger(logger, WithRequestHeaders(), WithResponseHeaders()))
+	r.Use(newTestLogger(t, logger, WithRequestHeaders(), WithResponseHeaders()))
 	r.GET("/api/users", func(c *gin.Context) {
 		c.Header("X-Custom", "value")
 		c.Header("Set-Cookie", "session=secretcookie")
@@ -392,7 +398,7 @@ func TestNewLoggerHandlerErrors(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	r.Use(NewLogger(logger))
+	r.Use(newTestLogger(t, logger))
 	r.GET("/api/users", func(c *gin.Context) {
 		_ = c.Error(assert.AnError)
 		c.Status(http.StatusInternalServerError)

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -113,12 +114,36 @@ func defaultLoggerOptions() *loggerOptions {
 }
 
 // LoggerOption configures the HTTP logging middleware created by NewLogger.
-type LoggerOption func(*loggerOptions)
+type LoggerOption func(*loggerOptions) error
 
-// WithIgnorePatterns skips logging of requests whose URL path matches any of the patterns.
+// WithLoggingIgnorePaths skips logging of requests whose URL path matches any of the patterns.
+// Each pattern is a Go regular expression matched against the request URL path.
+func WithLoggingIgnorePaths(patterns ...string) LoggerOption {
+	return func(lo *loggerOptions) error {
+		compiled := make([]*regexp.Regexp, 0, len(patterns))
+
+		for _, p := range patterns {
+			pattern, err := regexp.Compile(p)
+			if err != nil {
+				return fmt.Errorf("failed compiling logging ignore pattern %q: %w", p, err)
+			}
+
+			compiled = append(compiled, pattern)
+		}
+
+		lo.ignorePatterns = append(lo.ignorePatterns, compiled...)
+
+		return nil
+	}
+}
+
+// WithIgnorePatterns skips logging of requests whose URL path matches any of the pre-compiled patterns.
+// See WithLoggingIgnorePaths for the string variant.
 func WithIgnorePatterns(patterns ...*regexp.Regexp) LoggerOption {
-	return func(o *loggerOptions) {
-		o.ignorePatterns = append(o.ignorePatterns, patterns...)
+	return func(lo *loggerOptions) error {
+		lo.ignorePatterns = append(lo.ignorePatterns, patterns...)
+
+		return nil
 	}
 }
 
@@ -126,8 +151,10 @@ func WithIgnorePatterns(patterns ...*regexp.Regexp) LoggerOption {
 // Note that any policy other than BodyLogNever makes the middleware buffer up to
 // the configured maximum body size (see WithMaxBodySize) for every handled request.
 func WithRequestBody(policy BodyLogPolicy) LoggerOption {
-	return func(o *loggerOptions) {
-		o.requestBodyPolicy = policy
+	return func(lo *loggerOptions) error {
+		lo.requestBodyPolicy = policy
+
+		return nil
 	}
 }
 
@@ -135,68 +162,86 @@ func WithRequestBody(policy BodyLogPolicy) LoggerOption {
 // Note that any policy other than BodyLogNever makes the middleware buffer up to
 // the configured maximum body size (see WithMaxBodySize) for every handled request.
 func WithResponseBody(policy BodyLogPolicy) LoggerOption {
-	return func(o *loggerOptions) {
-		o.responseBodyPolicy = policy
+	return func(lo *loggerOptions) error {
+		lo.responseBodyPolicy = policy
+
+		return nil
 	}
 }
 
 // WithMaxBodySize sets the maximum number of body bytes kept for logging.
 // Longer bodies are truncated and flagged with a `<body_field>_truncated` field.
 func WithMaxBodySize(size int) LoggerOption {
-	return func(o *loggerOptions) {
-		o.maxBodySize = size
+	return func(lo *loggerOptions) error {
+		lo.maxBodySize = size
+
+		return nil
 	}
 }
 
 // WithBodyErrorStatus sets the lowest status code considered an error by the BodyLogOnError policy.
 func WithBodyErrorStatus(statusCode int) LoggerOption {
-	return func(o *loggerOptions) {
-		o.bodyErrorStatus = statusCode
+	return func(lo *loggerOptions) error {
+		lo.bodyErrorStatus = statusCode
+
+		return nil
 	}
 }
 
 // WithBodyContentTypes replaces the content type prefixes whose bodies may be logged.
 // Passing no prefixes allows any content type.
 func WithBodyContentTypes(prefixes ...string) LoggerOption {
-	return func(o *loggerOptions) {
-		o.bodyContentTypes = prefixes
+	return func(lo *loggerOptions) error {
+		lo.bodyContentTypes = prefixes
+
+		return nil
 	}
 }
 
 // WithRequestHeaders enables logging of the request headers.
 func WithRequestHeaders() LoggerOption {
-	return func(o *loggerOptions) {
-		o.logRequestHeaders = true
+	return func(lo *loggerOptions) error {
+		lo.logRequestHeaders = true
+
+		return nil
 	}
 }
 
 // WithResponseHeaders enables logging of the response headers.
 func WithResponseHeaders() LoggerOption {
-	return func(o *loggerOptions) {
-		o.logResponseHeaders = true
+	return func(lo *loggerOptions) error {
+		lo.logResponseHeaders = true
+
+		return nil
 	}
 }
 
 // WithRedactedHeaders replaces the set of headers whose values are redacted - see DefaultRedactedHeaders.
 func WithRedactedHeaders(names ...string) LoggerOption {
-	return func(o *loggerOptions) {
-		o.redactedHeaders = toLowerSet(names)
+	return func(lo *loggerOptions) error {
+		lo.redactedHeaders = toLowerSet(names)
+
+		return nil
 	}
 }
 
 // WithRedactedQueryParams replaces the set of query parameters
 // whose values are redacted - see DefaultRedactedQueryParams.
 func WithRedactedQueryParams(names ...string) LoggerOption {
-	return func(o *loggerOptions) {
-		o.redactedQuery = toLowerSet(names)
+	return func(lo *loggerOptions) error {
+		lo.redactedQuery = toLowerSet(names)
+
+		return nil
 	}
 }
 
 // WithRequestIDHeaders replaces the headers searched for a request ID - see DefaultRequestIDHeaders.
 // The RequestIDContextKey gin context key is used as a fallback when no header matches.
 func WithRequestIDHeaders(names ...string) LoggerOption {
-	return func(o *loggerOptions) {
-		o.requestIDHeaders = names
+	return func(lo *loggerOptions) error {
+		lo.requestIDHeaders = names
+
+		return nil
 	}
 }
 

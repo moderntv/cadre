@@ -3,9 +3,7 @@ package cadre
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
-	"regexp"
 
 	"github.com/moderntv/cadre/http/middleware"
 	"github.com/moderntv/cadre/metrics"
@@ -105,31 +103,11 @@ func WithMetricsListeningAddress(serverListeningAddress string) Option {
 	}
 }
 
-// WithLoggingIgnorePaths configures path patterns for which HTTP logging should be skipped.
-// Each pattern is a Go regular expression matched against the request URL path.
-// This applies to all HTTP servers including internal metrics and status servers.
-func WithLoggingIgnorePaths(patterns ...string) Option {
-	return func(options *Builder) error {
-		compiled := make([]*regexp.Regexp, 0, len(patterns))
-
-		for _, p := range patterns {
-			pattern, err := regexp.Compile(p)
-			if err != nil {
-				return fmt.Errorf("failed compiling logging ignore pattern %q: %w", p, err)
-			}
-
-			compiled = append(compiled, pattern)
-		}
-
-		options.httpLoggerOptions = append(options.httpLoggerOptions, middleware.WithIgnorePatterns(compiled...))
-
-		return nil
-	}
-}
-
-// WithHTTPLoggerOptions configures the HTTP logging middleware - request/response body logging, header logging,
-// redaction, ... This applies to all HTTP servers including internal metrics and status servers. Use the HTTP
-// server level WithLoggerOptions to configure a single server.
+// WithHTTPLoggerOptions configures the HTTP logging middleware - ignored paths, request/response body logging,
+// header logging, redaction, ... This applies to all HTTP servers including internal metrics and status servers.
+// Use the HTTP server level WithLoggerOptions to configure a single server.
+//
+//	cadre.WithHTTPLoggerOptions(middleware.WithLoggingIgnorePaths(`^/metrics$`, `^/status$`))
 func WithHTTPLoggerOptions(loggerOptions ...middleware.LoggerOption) Option {
 	return func(options *Builder) error {
 		options.httpLoggerOptions = append(options.httpLoggerOptions, loggerOptions...)

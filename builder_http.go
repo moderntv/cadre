@@ -85,10 +85,17 @@ func (h *httpOptions) build(
 		}
 
 		if h.enableLoggingMiddleware {
+			var loggingMiddleware gin.HandlerFunc
+
 			// the server's own options come last so that they can override the global ones
 			loggerOptions := append(slices.Clone(globalLoggerOptions), h.loggerOptions...)
 
-			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger, loggerOptions...))
+			loggingMiddleware, err = middleware.NewLogger(logger, loggerOptions...)
+			if err != nil {
+				return
+			}
+
+			serverMiddlewares = append(serverMiddlewares, loggingMiddleware)
 		}
 
 		serverMiddlewares = append(serverMiddlewares, gin.Recovery())
