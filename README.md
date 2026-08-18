@@ -37,8 +37,8 @@ Headers and bodies are opt-in because they are expensive and easy to leak secret
 b, err := cadre.NewBuilder(
     "example",
     cadre.WithLogger(logger),
-    cadre.WithLoggingIgnorePaths(`^/metrics$`, `^/status$`),
     cadre.WithHTTPLoggerOptions(
+        middleware.WithLoggingIgnorePaths(`^/metrics$`, `^/status$`),
         // log the request and response body of failed requests only
         middleware.WithRequestBody(middleware.BodyLogOnError),
         middleware.WithResponseBody(middleware.BodyLogOnError),
@@ -64,6 +64,7 @@ Notes:
 - sensitive headers (`Authorization`, `Cookie`, ...) and query parameters are replaced with `[REDACTED]`.
   The lists are configurable with `middleware.WithRedactedHeaders` and `middleware.WithRedactedQueryParams`.
 - `cadre.WithHTTPLoggerOptions` applies to all HTTP servers, `cadre.WithLoggerOptions` to a single one.
+- an invalid ignore path pattern is reported as an error from `b.Build()`.
 
 ## Disclaimer
 

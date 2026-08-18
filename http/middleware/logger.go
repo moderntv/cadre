@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
 	"net/http"
 	"slices"
@@ -16,10 +17,14 @@ import (
 //
 // Request metadata (method, path, route, status, latency, sizes, query, user agent, ...) is logged by default.
 // Headers and bodies are opt-in - see WithRequestHeaders, WithResponseHeaders, WithRequestBody and WithResponseBody.
-func NewLogger(log zerolog.Logger, opts ...LoggerOption) gin.HandlerFunc {
+func NewLogger(log zerolog.Logger, opts ...LoggerOption) (handler gin.HandlerFunc, err error) {
 	options := defaultLoggerOptions()
+
 	for _, opt := range opts {
-		opt(options)
+		err = opt(options)
+		if err != nil {
+			return nil, fmt.Errorf("cannot apply logger option: %w", err)
+		}
 	}
 
 	log = log.With().Str("module", "http").Logger()
@@ -98,7 +103,7 @@ func NewLogger(log zerolog.Logger, opts ...LoggerOption) gin.HandlerFunc {
 		default:
 			log.Trace().Msg(msg)
 		}
-	}
+	}, nil
 }
 
 // withRequestFields adds the request-scoped fields which are only logged when they carry a value.
