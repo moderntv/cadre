@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 	"github.com/moderntv/cadre/http"
@@ -21,6 +21,7 @@ type httpOptions struct {
 
 	enableLoggingMiddleware bool
 	enableMetricsMiddleware bool
+	loggerOptions           []middleware.LoggerOption
 
 	routerOptions      []gin.OptionFunc
 	globalMiddleware   []gin.HandlerFunc
@@ -46,6 +47,7 @@ func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
 
 		enableLoggingMiddleware: h.enableLoggingMiddleware,
 		enableMetricsMiddleware: h.enableMetricsMiddleware,
+		loggerOptions:           append(h.loggerOptions, other.loggerOptions...),
 
 		routerOptions:      append(h.routerOptions, other.routerOptions...),
 		globalMiddleware:   append(h.globalMiddleware, other.globalMiddleware...),
@@ -67,7 +69,7 @@ func (h *httpOptions) build(
 	cadreContext context.Context,
 	logger zerolog.Logger,
 	metricsRegistry *metrics.Registry,
-	loggingIgnorePatterns []*regexp.Regexp,
+	globalLoggerOptions []middleware.LoggerOption,
 ) (httpServer *http.HttpServer, err error) {
 	serverMiddlewares := []gin.HandlerFunc{}
 	{
@@ -83,7 +85,10 @@ func (h *httpOptions) build(
 		}
 
 		if h.enableLoggingMiddleware {
-			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger, loggingIgnorePatterns))
+			// the server's own options come last so that they can override the global ones
+			loggerOptions := append(slices.Clone(globalLoggerOptions), h.loggerOptions...)
+
+			serverMiddlewares = append(serverMiddlewares, middleware.NewLogger(logger, loggerOptions...))
 		}
 
 		serverMiddlewares = append(serverMiddlewares, gin.Recovery())
@@ -219,6 +224,16 @@ func WithRoutingGroup(group http.RoutingGroup) HTTPOption {
 func WithGinOptions(options ...gin.OptionFunc) HTTPOption {
 	return func(h *httpOptions) (err error) {
 		h.routerOptions = append(h.routerOptions, options...)
+		return nil
+	}
+}
+
+// WithLoggerOptions configures the logging middleware of this HTTP server only.
+// These options are applied after - and therefore override - the ones set by WithHTTPLoggerOptions.
+func WithLoggerOptions(loggerOptions ...middleware.LoggerOption) HTTPOption {
+	return func(h *httpOptions) error {
+		h.loggerOptions = append(h.loggerOptions, loggerOptions...)
+
 		return nil
 	}
 }
