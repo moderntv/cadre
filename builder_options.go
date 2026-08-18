@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/moderntv/cadre/http/middleware"
 	"github.com/moderntv/cadre/metrics"
 	"github.com/moderntv/cadre/status"
 	"github.com/prometheus/client_golang/prometheus"
@@ -109,14 +110,29 @@ func WithMetricsListeningAddress(serverListeningAddress string) Option {
 // This applies to all HTTP servers including internal metrics and status servers.
 func WithLoggingIgnorePaths(patterns ...string) Option {
 	return func(options *Builder) error {
+		compiled := make([]*regexp.Regexp, 0, len(patterns))
+
 		for _, p := range patterns {
-			compiled, err := regexp.Compile(p)
+			pattern, err := regexp.Compile(p)
 			if err != nil {
 				return fmt.Errorf("failed compiling logging ignore pattern %q: %w", p, err)
 			}
 
-			options.loggingIgnorePatterns = append(options.loggingIgnorePatterns, compiled)
+			compiled = append(compiled, pattern)
 		}
+
+		options.httpLoggerOptions = append(options.httpLoggerOptions, middleware.WithIgnorePatterns(compiled...))
+
+		return nil
+	}
+}
+
+// WithHTTPLoggerOptions configures the HTTP logging middleware - request/response body logging, header logging,
+// redaction, ... This applies to all HTTP servers including internal metrics and status servers. Use the HTTP
+// server level WithLoggerOptions to configure a single server.
+func WithHTTPLoggerOptions(loggerOptions ...middleware.LoggerOption) Option {
+	return func(options *Builder) error {
+		options.httpLoggerOptions = append(options.httpLoggerOptions, loggerOptions...)
 
 		return nil
 	}

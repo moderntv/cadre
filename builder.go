@@ -8,7 +8,6 @@ import (
 	"net"
 	stdhttp "net/http"
 	"os"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/moderntv/cadre/http"
+	"github.com/moderntv/cadre/http/middleware"
 	"github.com/moderntv/cadre/http/responses"
 	"github.com/moderntv/cadre/metrics"
 	"github.com/moderntv/cadre/status"
@@ -61,7 +61,7 @@ type Builder struct {
 	metricsPath           string
 
 	// logging
-	loggingIgnorePatterns []*regexp.Regexp
+	httpLoggerOptions []middleware.LoggerOption
 
 	grpcOptions *grpcOptions
 	httpOptions []*httpOptions
@@ -416,7 +416,7 @@ func (b *Builder) buildHTTP(
 			cadreContext,
 			b.logger,
 			b.metrics,
-			b.loggingIgnorePatterns,
+			b.httpLoggerOptions,
 		)
 		if err != nil {
 			return
