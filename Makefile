@@ -8,4 +8,4 @@ lint:
 
 .PHONY: clean
 clean:
-	rm cp.out golangci-lint.out golangci-lint.out.html
+	@rm -f cp.out golangci-lint.out golangci-lint.out.html
