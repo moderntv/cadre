@@ -3,7 +3,6 @@ package cadre
 import (
 	"context"
 	"fmt"
-	"log"
 	"slices"
 
 	"github.com/gin-gonic/gin"
@@ -38,8 +37,6 @@ func (h *httpOptions) ensure() (err error) {
 }
 
 func (h *httpOptions) merge(other *httpOptions) (hh *httpOptions, err error) {
-	log.Printf("merging %s into %s", other.serverName, h.serverName)
-
 	hh = &httpOptions{
 		serverName:       h.serverName,
 		services:         append(h.services, other.services...),

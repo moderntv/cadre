@@ -183,7 +183,7 @@ func WithRecoveryOptions(opts []grpc_recovery.Option) GRPCOption {
 }
 
 // WithUnaryInterceptors adds custom grpc unary interceptor(s) to the end of the interceptor chain
-// default order (if not disabled) - ctxtags, logging, recovery, metrics.
+// default order (if not disabled) - ctxtags, logging, metrics, these, recovery.
 func WithUnaryInterceptors(unaryInterceptors ...grpc.UnaryServerInterceptor) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.extraUnaryInterceptors = append(g.extraUnaryInterceptors, unaryInterceptors...)
@@ -193,7 +193,7 @@ func WithUnaryInterceptors(unaryInterceptors ...grpc.UnaryServerInterceptor) GRP
 }
 
 // WithStreamInterceptors adds custom grpc stream interceptor(s) to the end of the interceptor chain
-// default order (if not disabled) - ctxtags, logging, recovery, metrics.
+// default order (if not disabled) - ctxtags, logging, metrics, these, recovery.
 func WithStreamInterceptors(streamInterceptors ...grpc.StreamServerInterceptor) GRPCOption {
 	return func(g *grpcOptions) error {
 		g.extraStreamInterceptors = append(g.extraStreamInterceptors, streamInterceptors...)

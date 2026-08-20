@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	stdhttp "net/http"
 	"os"
@@ -206,35 +205,45 @@ func (b *Builder) Build() (c *cadre, err error) {
 	for addr, httpServer := range httpServers {
 		httpServer.LogRegisteredRoutes()
 
-		var h stdhttp.Handler = httpServer
+		var (
+			h           stdhttp.Handler = httpServer
+			multiplexed                 = b.grpcOptions != nil && b.grpcOptions.listeningAddress == addr
+		)
 
 		// http+grpc multiplexing
-		if b.grpcOptions != nil && b.grpcOptions.listeningAddress == addr {
+		if multiplexed {
 			h = stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-				log.Printf( //nolint: gosec
-					"handling http request. protomajor = %v; content-type = %v; headers = %v",
-					r.ProtoMajor,
-					r.Header.Get("Content-Type"),
-					r.Header,
-				)
-
 				if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
 					c.grpcServer.ServeHTTP(w, r)
-				} else {
-					httpServer.ServeHTTP(w, r)
+					return
 				}
+
+				httpServer.ServeHTTP(w, r)
 			})
 
-			log.Println("disable grpcListener")
+			b.logger.Debug().
+				Str("addr", addr).
+				Msg("multiplexing grpc with http - standalone grpc listener disabled")
 
 			c.grpcListener = nil
 		}
 
-		c.httpServers[addr] = &stdhttp.Server{
+		server := &stdhttp.Server{
 			Addr:              addr,
 			Handler:           h,
 			ReadHeaderTimeout: 5 * time.Second,
 		}
+
+		if multiplexed {
+			// gRPC clients speak cleartext HTTP/2, which net/http only serves when it is enabled explicitly.
+			// Without this the requests would be parsed as HTTP/1.1 and never reach the gRPC server.
+			protocols := new(stdhttp.Protocols)
+			protocols.SetHTTP1(true)
+			protocols.SetUnencryptedHTTP2(true)
+			server.Protocols = protocols
+		}
+
+		c.httpServers[addr] = server
 	}
 
 	return
@@ -400,6 +409,11 @@ func (b *Builder) buildHTTP(
 	for _, newServer := range b.httpOptions {
 		addr := newServer.listeningAddress
 		if existingServer, ok := mergedHTTPOptions[addr]; ok {
+			b.logger.Debug().
+				Str("addr", addr).
+				Msgf("merging http server `%s` into `%s` - they share a listening address",
+					newServer.serverName, existingServer.serverName)
+
 			mergedHTTPOptions[addr], err = existingServer.merge(newServer)
 			if err != nil {
 				return
