@@ -1,13 +1,14 @@
-module github.com/moderntv/cadre/_examples
+module github.com/moderntv/cadre/examples
 
 go 1.26.1
 
 require (
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gogo/protobuf v1.3.2
 	github.com/moderntv/cadre v0.7.2
+	github.com/prometheus/client_golang v1.24.1
 	github.com/rs/zerolog v1.35.1
 	google.golang.org/grpc v1.83.1
+	google.golang.org/protobuf v1.36.12
 )
 
 replace github.com/moderntv/cadre => ../
@@ -27,6 +28,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.3 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -39,7 +41,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.24.1 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
@@ -56,5 +57,4 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
-	google.golang.org/protobuf v1.36.12 // indirect
 )
