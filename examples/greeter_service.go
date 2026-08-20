@@ -1,5 +1,3 @@
-// Package examples holds the gRPC service implementations shared by the example commands in the
-// subdirectories of this module.
 package examples
 
 import (
