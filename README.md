@@ -1,4 +1,3 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/moderntv/cadre)](https://goreportcard.com/report/github.com/moderntv/cadre)
 ![Go Version](https://img.shields.io/github/go-mod/go-version/moderntv/cadre)
 ![Lint Workflow Status](https://github.com/moderntv/cadre/actions/workflows/ci.yml/badge.svg?branch=master)
 
@@ -21,15 +20,15 @@ See `_examples` folder for usage details.
 
 Every HTTP server gets a logging middleware which logs one entry per handled request with the following fields:
 
-| Field | Note |
-|---|---|
-| `method`, `path`, `route`, `host`, `proto` | `route` is the gin route template (`/users/:id`), useful for aggregation |
-| `status_code`, `latency`, `latency_str` | |
-| `request_size`, `response_size` | `request_size` is omitted for requests with an unknown length |
-| `ip`, `user_agent`, `referer` | |
-| `query` | values of sensitive parameters (`token`, `password`, ...) are redacted |
-| `request_id` | first match of `X-Request-Id`/`X-Correlation-Id`, falling back to the `request_id` gin context key |
-| `errors` | errors collected by the handlers into `gin.Context` |
+| Field                                      | Note                                                                                               |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `method`, `path`, `route`, `host`, `proto` | `route` is the gin route template (`/users/:id`), useful for aggregation                           |
+| `status_code`, `latency`, `latency_str`    |                                                                                                    |
+| `request_size`, `response_size`            | `request_size` is omitted for requests with an unknown length                                      |
+| `ip`, `user_agent`, `referer`              |                                                                                                    |
+| `query`                                    | values of sensitive parameters (`token`, `password`, ...) are redacted                             |
+| `request_id`                               | first match of `X-Request-Id`/`X-Correlation-Id`, falling back to the `request_id` gin context key |
+| `errors`                                   | errors collected by the handlers into `gin.Context`                                                |
 
 Headers and bodies are opt-in because they are expensive and easy to leak secrets with:
 
