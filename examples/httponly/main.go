@@ -1,3 +1,11 @@
+// Command httponly starts a Cadre server with a single HTTP interface.
+//
+// Because no separate addresses are configured, the Prometheus and status endpoints are merged into the
+// main HTTP server:
+//
+//	http://localhost:8000/hello
+//	http://localhost:8000/metrics
+//	http://localhost:8000/status
 package main
 
 import (
@@ -40,13 +48,17 @@ func main() {
 		),
 	)
 	if err != nil {
-		panic(err)
+		logger.Fatal().Err(err).Msg("cannot configure cadre")
 	}
 
 	c, err := b.Build()
 	if err != nil {
-		panic(err)
+		logger.Fatal().Err(err).Msg("cannot build cadre")
 	}
 
-	panic(c.Start())
+	// Start blocks until the process is signalled (or Shutdown is called) and every server has stopped.
+	err = c.Start()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("cadre failed")
+	}
 }
