@@ -2,9 +2,13 @@ package metrics
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -271,4 +275,63 @@ func TestRegistry_Get(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewRegistry_GoCollector(t *testing.T) {
+	t.Parallel()
+
+	const gcCPUMetric = "go_cpu_classes_gc_total_cpu_seconds_total"
+
+	gatheredNames := func(t *testing.T, registry *Registry) []string {
+		t.Helper()
+
+		families, err := registry.GetPrometheusRegistry().Gather()
+		require.NoError(t, err)
+
+		names := make([]string, 0, len(families))
+		for _, family := range families {
+			names = append(names, family.GetName())
+		}
+
+		return names
+	}
+
+	t.Run("default", func(t *testing.T) {
+		t.Parallel()
+
+		registry, err := NewRegistry(testNameSimple, nil)
+		require.NoError(t, err)
+
+		names := gatheredNames(t, registry)
+		assert.Contains(t, names, "go_goroutines")
+		assert.NotContains(t, names, gcCPUMetric)
+	})
+
+	t.Run("replaced", func(t *testing.T) {
+		t.Parallel()
+
+		goCollector := collectors.NewGoCollector(
+			collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{
+				Matcher: regexp.MustCompile(`^/cpu/classes/gc/total:`),
+			}),
+		)
+
+		registry, err := NewRegistry(testNameSimple, nil, WithGoCollector(goCollector))
+		require.NoError(t, err)
+
+		got, err := registry.Get("go")
+		require.NoError(t, err)
+		assert.Same(t, goCollector, got)
+
+		names := gatheredNames(t, registry)
+		assert.Contains(t, names, "go_goroutines")
+		assert.Contains(t, names, gcCPUMetric)
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := NewRegistry(testNameSimple, nil, WithGoCollector(nil))
+		require.ErrorIs(t, err, ErrMetricNil)
+	})
 }

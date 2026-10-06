@@ -321,7 +321,18 @@ b, err := cadre.NewBuilder("myservice", cadre.WithMetricsRegistry(metricsRegistr
 
 There are `New*`, `RegisterNew*` and `RegisterOrGetNew*` variants for `Counter`, `CounterVec`, `Gauge`,
 `GaugeVec`, `Histogram`, `HistogramVec` and `SummaryVec`. Go runtime and process collectors are registered
-automatically.
+automatically. The Go runtime collector uses the client_golang defaults; `metrics.WithGoCollector` replaces it
+with a configured one, e.g. to expose the `/cpu/classes` runtime metrics:
+
+```go
+metricsRegistry, err := metrics.NewRegistry("myservice", nil, metrics.WithGoCollector(
+	collectors.NewGoCollector(
+		collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{
+			Matcher: regexp.MustCompile(`^/cpu/classes/`),
+		}),
+	),
+))
+```
 
 Pass either `WithMetricsRegistry` or `WithPrometheusRegistry`, never both - `Build()` rejects that.
 

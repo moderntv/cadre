@@ -27,7 +27,49 @@ type Registry struct {
 	metrics map[string]prometheus.Collector
 }
 
-func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (registry *Registry, err error) {
+type registryOptions struct {
+	goCollector prometheus.Collector
+}
+
+type Option func(*registryOptions) error
+
+// WithGoCollector replaces the default Go runtime collector registered under the name "go". Use it to expose
+// runtime/metrics that collectors.NewGoCollector leaves out by default:
+//
+//	metrics.WithGoCollector(collectors.NewGoCollector(
+//		collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{
+//			Matcher: regexp.MustCompile(`^/cpu/classes/`),
+//		}),
+//	))
+func WithGoCollector(c prometheus.Collector) Option {
+	return func(options *registryOptions) error {
+		if c == nil {
+			return ErrMetricNil
+		}
+
+		options.goCollector = c
+
+		return nil
+	}
+}
+
+func NewRegistry(
+	namespace string,
+	prometheusRegistry *prometheus.Registry,
+	opts ...Option,
+) (registry *Registry, err error) {
+	options := &registryOptions{}
+	for _, opt := range opts {
+		err = opt(options)
+		if err != nil {
+			return
+		}
+	}
+
+	if options.goCollector == nil {
+		options.goCollector = collectors.NewGoCollector()
+	}
+
 	if prometheusRegistry == nil {
 		prometheusRegistry = prometheus.NewRegistry()
 	}
@@ -38,7 +80,7 @@ func NewRegistry(namespace string, prometheusRegistry *prometheus.Registry) (reg
 		metrics:            map[string]prometheus.Collector{},
 	}
 
-	err = registry.Register("go", collectors.NewGoCollector())
+	err = registry.Register("go", options.goCollector)
 	if err != nil {
 		err = fmt.Errorf("cannot register go collector: %w", err)
 		return

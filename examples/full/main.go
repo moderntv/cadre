@@ -12,6 +12,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,7 @@ import (
 	"github.com/moderntv/cadre/metrics"
 	"github.com/moderntv/cadre/status"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/rs/zerolog"
 )
 
@@ -46,8 +48,15 @@ func main() {
 	dbStatus.SetStatus(status.OK, "connected")
 
 	// Metrics - a Cadre registry wraps a Prometheus one and keys collectors by a name of your choosing, so
-	// they can be looked up again later instead of being passed around.
-	metricsRegistry, err := metrics.NewRegistry("example", nil)
+	// they can be looked up again later instead of being passed around. The Go runtime collector is
+	// replaced to also expose the /cpu/classes runtime metrics, e.g. for GC CPU usage.
+	metricsRegistry, err := metrics.NewRegistry("example", nil, metrics.WithGoCollector(
+		collectors.NewGoCollector(
+			collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{
+				Matcher: regexp.MustCompile(`^/cpu/classes/`),
+			}),
+		),
+	))
 	if err != nil {
 		logger.Fatal().Err(err).Msg("cannot create metrics registry")
 	}

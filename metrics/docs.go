@@ -15,6 +15,8 @@
 //
 // [NewRegistry] creates a Prometheus registry when none is passed in, and always registers the Go runtime
 // and process collectors. Pass an existing one to share it with code that does not go through this package.
+// [WithGoCollector] swaps the default Go runtime collector for a configured one, for example to expose the
+// /cpu/classes runtime metrics needed to chart GC CPU usage.
 //
 // # Collector helpers
 //
