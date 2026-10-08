@@ -396,6 +396,8 @@ func (b *Builder) buildGrpc(c *cadre) (err error) {
 		registrator(c.grpcServer)
 	}
 
+	grpcMetrics.InitializeMetrics(c.grpcServer)
+
 	// grpc listener
 	if b.grpcOptions.listeningAddress != "" && !b.grpcOptions.multiplexWithHTTP {
 		var lc net.ListenConfig
