@@ -15,6 +15,11 @@
 // The aliases map translates gRPC service names into the names used in Consul, for the common case where
 // the two differ. A service with no alias is looked up under its own name.
 //
+// WithNear sorts instances by the estimated round trip time from a Consul node, nearest first, and WithLimit
+// keeps only the first n of them. "_agent" sorts from the agent the registry talks to, so point the registry
+// at the local agent. The order only matters to order-aware balancers: pick_first uses the nearest healthy
+// instance, while round_robin combined with WithLimit spreads calls over the n nearest ones.
+//
 // Registration is expected to be handled outside the application - by the Consul agent or the scheduler -
 // so this backend is a read-only view: Register and Deregister are accepted but do nothing.
 package consul

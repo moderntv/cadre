@@ -30,3 +30,4 @@ golangci-lint.out
 
 # AI
 *.local.json
+.omc
