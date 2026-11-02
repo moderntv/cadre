@@ -471,7 +471,7 @@ Backends:
 | --- | --- | --- |
 | `registry/static` | `static.NewRegistry(map[string][]string{...})` | fixed addresses, no watching |
 | `registry/file` | `file.NewRegistry(path, file.WithWatch())` | YAML, optionally reloaded on change |
-| `registry/consul` | `consul.NewRegistry(addr, dc, aliases, refreshPeriod)` | polls the Consul catalog |
+| `registry/consul` | `consul.NewRegistry(addr, dc, aliases, refreshPeriod, opts...)` | polls the Consul catalog; `WithNear`/`WithLimit` keep the nearest instances first |
 
 The file backend expects a service-name-to-addresses mapping:
 

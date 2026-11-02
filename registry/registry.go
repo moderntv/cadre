@@ -5,6 +5,7 @@ type RegistryChangeType int
 const (
 	RCTRegistered RegistryChangeType = iota
 	RCTDeregistered
+	RCTReordered
 )
 
 type RegistryChange struct {

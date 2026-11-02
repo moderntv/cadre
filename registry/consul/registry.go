@@ -2,6 +2,7 @@ package consul
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -24,16 +25,68 @@ type consulRegistry struct {
 	refreshPeriod time.Duration
 	// aliases is used for mapping gRPC service names to Consul service names.
 	aliases map[string]string
-	mu      sync.RWMutex
+	// near is the Consul node instances are sorted by estimated round trip time from.
+	near string
+	// limit is the maximum number of instances kept per service, 0 means no limit.
+	limit int
+	mu    sync.RWMutex
 	// services maps service names to currently known service instances.
 	services map[string][]registry.Instance
+}
+
+type options struct {
+	near  string
+	limit int
+}
+
+type Option func(*options) error
+
+// WithNear sorts instances by the estimated round trip time from the given Consul node, nearest first.
+// The special node name "_agent" refers to the node of the agent the registry talks to.
+func WithNear(node string) Option {
+	return func(o *options) error {
+		if node == "" {
+			return errors.New("near node must not be empty")
+		}
+
+		o.near = node
+
+		return nil
+	}
+}
+
+// WithLimit keeps only the first n instances of every service. It requires WithNear, so that the kept
+// instances are the nearest ones.
+func WithLimit(n int) Option {
+	return func(o *options) error {
+		if n <= 0 {
+			return fmt.Errorf("limit must be positive, got %d", n)
+		}
+
+		o.limit = n
+
+		return nil
+	}
 }
 
 func NewRegistry(
 	address, datacenter string,
 	aliases map[string]string,
 	refreshPeriod time.Duration,
+	opts ...Option,
 ) (registry.Registry, error) {
+	o := &options{}
+	for _, opt := range opts {
+		err := opt(o)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if o.limit > 0 && o.near == "" {
+		return nil, errors.New("limit requires near to be set")
+	}
+
 	config := consul.DefaultConfig()
 	config.Address = address
 
@@ -47,6 +100,8 @@ func NewRegistry(
 		datacenter:    datacenter,
 		refreshPeriod: refreshPeriod,
 		aliases:       aliases,
+		near:          o.near,
+		limit:         o.limit,
 		services:      make(map[string][]registry.Instance),
 	}
 
@@ -137,6 +192,7 @@ func (cr *consulRegistry) watch(
 func (cr *consulRegistry) resolveService(service, consulService string, ch chan<- registry.RegistryChange) {
 	q := &consul.QueryOptions{
 		Datacenter: cr.datacenter,
+		Near:       cr.near,
 	}
 
 	entries, _, err := cr.client.Health().Service(consulService, "", true, q)
@@ -158,6 +214,10 @@ func (cr *consulRegistry) resolveService(service, consulService string, ch chan<
 		logger.Warningf("could not find any instances for service (%s)", service)
 	}
 
+	if cr.limit > 0 && len(instances) > cr.limit {
+		instances = instances[:cr.limit]
+	}
+
 	cr.writeChanges(service, instances, ch)
 }
 
@@ -170,6 +230,15 @@ func (cr *consulRegistry) writeChanges(
 	defer cr.mu.Unlock()
 
 	oldInstances := cr.services[service]
+
+	sameAddress := func(a, b registry.Instance) bool {
+		return a.Address() == b.Address()
+	}
+	if slices.EqualFunc(oldInstances, newInstances, sameAddress) {
+		logger.Infof("no instance changes for (%s)", service)
+		return
+	}
+
 	changed := false
 
 	for _, oldInstance := range oldInstances {
@@ -200,10 +269,14 @@ func (cr *consulRegistry) writeChanges(
 		}
 	}
 
-	if changed {
-		cr.services[service] = newInstances
-		logger.Infof("updated instances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
-	} else {
-		logger.Infof("no instance changes for (%s)", service)
+	// The same instances in a different order, e.g. after the round trip time estimates shifted.
+	if !changed {
+		ch <- registry.RegistryChange{
+			Instance: newInstances[0],
+			Type:     registry.RCTReordered,
+		}
 	}
+
+	cr.services[service] = newInstances
+	logger.Infof("updated instances from (%s) to (%s) for service (%s)", oldInstances, newInstances, service)
 }
